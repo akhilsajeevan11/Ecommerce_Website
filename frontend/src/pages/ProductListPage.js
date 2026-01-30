@@ -202,77 +202,83 @@ const ProductListPage = () => {
     );
   };
 
-  // Filter Content Component
-  const FilterContent = ({ categories, selectedCategories, toggleCategory, priceRange, setPriceRange, maxPrice }) => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
-      {/* Category Filter */}
-      <div>
-        <h3 style={{ 
-          fontFamily: "'Bodoni Moda', serif", 
-          fontSize: '16px', 
-          marginBottom: '20px',
-          fontWeight: 700
-        }}>
-          Category
-        </h3>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          {categories.map(category => (
-            <div key={category} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <Checkbox
-                id={`cat-${category}`}
-                checked={selectedCategories.includes(category)}
-                onCheckedChange={() => toggleCategory(category)}
-                style={{ borderRadius: 0, width: '18px', height: '18px' }}
-                data-testid={`filter-category-${category}`}
-              />
-              <Label 
-                htmlFor={`cat-${category}`} 
-                style={{ 
-                  fontFamily: "'Manrope', sans-serif", 
-                  fontSize: '13px', 
-                  cursor: 'pointer',
-                  fontWeight: 500,
-                  color: '#18181b'
-                }}
-              >
-                {category}
-              </Label>
-            </div>
-          ))}
+    // Filter Content Component
+    const FilterContent = ({ categories, selectedCategories, toggleCategory, priceRange, setPriceRange, maxPrice }) => (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
+        {/* Category Filter */}
+        <div>
+          <h3 style={{ 
+            fontFamily: "'JetBrains Mono', monospace", 
+            fontSize: '11px', 
+            marginBottom: '20px',
+            fontWeight: 500,
+            textTransform: 'uppercase',
+            letterSpacing: '0.1em',
+            color: '#000'
+          }}>
+            Category
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            {categories.map(category => (
+              <div key={category} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <Checkbox
+                  id={`cat-${category}`}
+                  checked={selectedCategories.includes(category)}
+                  onCheckedChange={() => toggleCategory(category)}
+                  style={{ borderRadius: 0, width: '16px', height: '16px', border: '1px solid #000' }}
+                  data-testid={`filter-category-${category}`}
+                />
+                <Label 
+                  htmlFor={`cat-${category}`} 
+                  style={{ 
+                    fontFamily: "'JetBrains Mono', monospace", 
+                    fontSize: '12px', 
+                    cursor: 'pointer',
+                    fontWeight: 400,
+                    color: '#000'
+                  }}
+                >
+                  {category}
+                </Label>
+              </div>
+            ))}
+          </div>
+        </div>
+  
+        {/* Price Range Filter */}
+        <div>
+          <h3 style={{ 
+            fontFamily: "'JetBrains Mono', monospace", 
+            fontSize: '11px', 
+            marginBottom: '20px',
+            fontWeight: 500,
+            textTransform: 'uppercase',
+            letterSpacing: '0.1em',
+            color: '#000'
+          }}>
+            Price Range
+          </h3>
+          <Slider
+            min={0}
+            max={maxPrice}
+            step={100}
+            value={priceRange}
+            onValueChange={setPriceRange}
+            style={{ marginBottom: '16px' }}
+            data-testid="price-slider"
+          />
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            fontFamily: "'JetBrains Mono', monospace",
+            fontSize: '11px', 
+            color: '#71717a' 
+          }}>
+            <span>₹{priceRange[0].toLocaleString()}</span>
+            <span>₹{priceRange[1].toLocaleString()}</span>
+          </div>
         </div>
       </div>
-
-      {/* Price Range Filter */}
-      <div>
-        <h3 style={{ 
-          fontFamily: "'Bodoni Moda', serif", 
-          fontSize: '16px', 
-          marginBottom: '20px',
-          fontWeight: 700
-        }}>
-          Price Range
-        </h3>
-        <Slider
-          min={0}
-          max={maxPrice}
-          step={100}
-          value={priceRange}
-          onValueChange={setPriceRange}
-          style={{ marginBottom: '16px' }}
-          data-testid="price-slider"
-        />
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          fontFamily: "'JetBrains Mono', monospace",
-          fontSize: '11px', 
-          color: '#71717a' 
-        }}>
-          <span>₹{priceRange[0].toLocaleString()}</span>
-          <span>₹{priceRange[1].toLocaleString()}</span>
-        </div>
-      </div>
-    </div>
-  );
+    );
 
 export default ProductListPage;

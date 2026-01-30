@@ -47,68 +47,74 @@ const Navigation = () => {
           margin: '0 auto',
           padding: '0 24px'
         }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            height: '80px'
-          }}>
-            {/* Logo - Left */}
-            <div style={{ flex: '1 1 0%' }}>
-              <Link 
-                to="/" 
-                data-testid="logo-link" 
-                style={{
-                  fontFamily: "'Bodoni Moda', serif",
-                  fontSize: '24px',
-                  fontWeight: 700,
-                  letterSpacing: '0.05em',
-                  textDecoration: 'none',
-                  color: '#000000'
-                }}
-              >
-                NOIR
-              </Link>
-            </div>
-
-            {/* Center Menu - Desktop */}
-            <div className="desktop-only-flex" style={{
+            <div style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '40px'
+              justifyContent: 'space-between',
+              height: '80px',
+              position: 'relative'
             }}>
-              {navLinks.map(link => {
-                const isActive = location.pathname === link.path;
-                return (
-                  <Link
-                    key={link.path}
-                    to={link.path}
-                    data-testid={`nav-${link.label.toLowerCase()}`}
-                    style={{
-                      fontFamily: "'Manrope', sans-serif",
-                      fontSize: '13px',
-                      textDecoration: 'none',
-                      color: '#000000',
-                      borderBottom: isActive ? '1px solid #000000' : 'none',
-                      paddingBottom: '4px',
-                      letterSpacing: '0.05em',
-                      fontWeight: isActive ? 600 : 400
-                    }}
-                  >
-                    {link.label}
-                  </Link>
-                );
-              })}
-            </div>
-
-            {/* Right Actions - Desktop */}
-            <div className="desktop-only-flex" style={{
-              flex: '1 1 0%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'flex-end',
-              gap: '24px'
-            }}>
+              {/* Logo - Left */}
+              <div style={{ flex: '0 0 200px' }}>
+                <Link 
+                  to="/" 
+                  data-testid="logo-link" 
+                  style={{
+                    fontFamily: "'Bodoni Moda', serif",
+                    fontSize: '26px',
+                    fontWeight: 700,
+                    letterSpacing: '0.1em',
+                    textDecoration: 'none',
+                    color: '#000000',
+                    textTransform: 'uppercase'
+                  }}
+                >
+                  NOIR
+                </Link>
+              </div>
+  
+              {/* Center Menu - Desktop */}
+              <div className="desktop-only-flex" style={{
+                position: 'absolute',
+                left: '50%',
+                top: '50%',
+                transform: 'translate(-50%, -50%)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '40px'
+              }}>
+                {navLinks.map(link => {
+                  const isActive = location.pathname === link.path;
+                  return (
+                    <Link
+                      key={link.path}
+                      to={link.path}
+                      data-testid={`nav-${link.label.toLowerCase()}`}
+                      style={{
+                        fontFamily: "'Manrope', sans-serif",
+                        fontSize: '13px',
+                        textDecoration: 'none',
+                        color: '#000000',
+                        borderBottom: isActive ? '1px solid #000000' : 'none',
+                        paddingBottom: '2px',
+                        letterSpacing: '0.05em',
+                        fontWeight: isActive ? 600 : 400
+                      }}
+                    >
+                      {link.label}
+                    </Link>
+                  );
+                })}
+              </div>
+  
+              {/* Right Actions - Desktop */}
+              <div className="desktop-only-flex" style={{
+                flex: '0 0 200px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'flex-end',
+                gap: '24px'
+              }}>
               <CartDrawer>
                 <button
                   style={{

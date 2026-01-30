@@ -10,6 +10,9 @@ from datetime import datetime, timedelta, timezone
 import uuid
 import os
 import razorpay
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = FastAPI()
 
