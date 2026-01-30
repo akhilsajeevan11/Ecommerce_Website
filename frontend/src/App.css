@@ -1,0 +1,83 @@
+.App {
+  min-height: 100vh;
+}
+
+/* Typography */
+.heading-font {
+  font-family: 'Bodoni Moda', serif;
+}
+
+.heading-font-normal {
+  font-family: 'Bodoni Moda', serif;
+  font-style: normal;
+}
+
+.body-font {
+  font-family: 'Manrope', sans-serif;
+}
+
+.mono-font {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Button interactions */
+.btn-noir {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-noir:hover {
+  transform: scale(0.98);
+}
+
+.btn-noir:active {
+  transform: scale(0.95);
+}
+
+/* Page transitions */
+.page-transition {
+  animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+    filter: blur(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+/* Grayscale image effect */
+.grayscale-image {
+  filter: grayscale(100%);
+  transition: filter 0.4s ease;
+}
+
+.grayscale-image:hover {
+  filter: grayscale(0%);
+}
+
+/* Responsive utilities */
+@media (min-width: 768px) {
+  .desktop-only-flex {
+    display: flex;
+  }
+  
+  .mobile-only {
+    display: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .desktop-only-flex {
+    display: none;
+  }
+  
+  .mobile-only {
+    display: block;
+  }
+}

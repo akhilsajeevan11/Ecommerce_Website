@@ -1,0 +1,154 @@
+{
+  "brand_identity": {
+    "name": "NOIR",
+    "archetype": "Monochrome Luxury",
+    "core_values": ["Timeless", "Structural", "Tactile", "Immersive"],
+    "emotional_tone": "Confident, Stark, Artistic, Premium"
+  },
+  "typography": {
+    "headings": {
+      "font_family": "Bodoni Moda, serif",
+      "weights": ["400", "700"],
+      "usage": "All section titles, hero text, product names. Use lowercase for a modern 'brutalist' feel or all-caps for authority.",
+      "letter_spacing": "tracking-tight"
+    },
+    "body": {
+      "font_family": "Manrope, sans-serif",
+      "weights": ["300", "400", "500"],
+      "usage": "Descriptions, UI elements, prices.",
+      "letter_spacing": "tracking-normal"
+    },
+    "mono": {
+      "font_family": "JetBrains Mono, monospace",
+      "usage": "Technical specs, SKU numbers, 'Add to Cart' labels."
+    }
+  },
+  "colors": {
+    "palette": {
+      "background": "#FFFFFF",
+      "foreground": "#000000",
+      "primary": "#000000",
+      "primary_foreground": "#FFFFFF",
+      "secondary": "#F4F4F5",
+      "secondary_foreground": "#18181B",
+      "muted": "#F4F4F5",
+      "muted_foreground": "#71717A",
+      "accent": "#18181B",
+      "accent_foreground": "#FAFAFA",
+      "border": "#E4E4E7",
+      "input": "#E4E4E7",
+      "ring": "#18181B"
+    },
+    "rules": [
+      "NO GRADIENTS. Flat, solid colors only.",
+      "Use texture (noise, grain) instead of color variation.",
+      "Dark mode is not a toggle, it is a section-specific choice (e.g., Hero is dark, Product Grid is light)."
+    ]
+  },
+  "layout_strategies": {
+    "spacing": {
+      "base_unit": "4px",
+      "container_padding": "px-6 md:px-12 lg:px-24",
+      "section_gap": "gap-24 md:gap-32",
+      "component_gap": "gap-4 md:gap-8"
+    },
+    "grid_system": {
+      "type": "Bento / Tetris",
+      "columns": "grid-cols-1 md:grid-cols-12",
+      "rules": [
+        "Avoid symmetry. Use 7/5 or 8/4 splits.",
+        "Product cards should vary in height (aspect-ratio-3/4 vs aspect-ratio-1/1).",
+        "Use negative space as a design element."
+      ]
+    }
+  },
+  "components": {
+    "buttons": {
+      "style": "Sharp edges (rounded-none) or Pill (rounded-full). NEVER default rounded-md.",
+      "interaction": "Hover: Invert colors (Black bg/White text -> White bg/Black text with border).",
+      "animation": "scale-95 on click."
+    },
+    "cards": {
+      "style": "No shadow, 1px border (border-zinc-200).",
+      "hover": "No lift. Image zoom (scale-105) inside overflow-hidden container."
+    },
+    "inputs": {
+      "style": "Underline only (border-b border-zinc-300) or solid block (bg-zinc-100). No standard outlined inputs."
+    },
+    "navigation": {
+      "style": "Floating glass or sticky solid border-b.",
+      "content": "Minimal. Logo left, 'Cart (0)' right. Menu center."
+    }
+  },
+  "three_d_strategy": {
+    "library": "react-three-fiber",
+    "helpers": "@react-three/drei",
+    "features": [
+      "OrbitControls (enableZoom={false} enablePan={false})",
+      "Stage (environment='city' intensity={0.5})",
+      "Html (for floating annotations)"
+    ],
+    "interaction_patterns": [
+      "Auto-rotate on idle.",
+      "Smooth transition to 'Exploded View' on click (if applicable).",
+      "Color picker updates material prop instantly."
+    ],
+    "performance": "Use 'useGLTF' with Draco compression. Lazy load models."
+  },
+  "visual_enhancers": {
+    "textures": "Add a fixed position div with 'bg-noise' opacity-5 pointer-events-none z-50 over the whole app.",
+    "motion": "Use 'framer-motion' for page transitions. Fade up + Blur in (y: 20, opacity: 0, filter: 'blur(10px)').",
+    "cursors": "Custom SVG cursor (circle) that expands on hoverable elements."
+  },
+  "image_urls": {
+    "hero": [
+      {
+        "url": "https://images.unsplash.com/photo-1765306552441-cd32bb216b0c?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Woman in black sitting minimalist studio",
+        "category": "hero_main"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1760512901586-f70030a53cd1?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Woman in black jacket looking down",
+        "category": "hero_secondary"
+      }
+    ],
+    "products": [
+      {
+        "url": "https://images.unsplash.com/photo-1601926299866-6a5c9bfa6be0?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Minimalist clothes rack",
+        "category": "product_listing"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1666358062994-a9bab157abf1?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Black coat hanging",
+        "category": "product_detail"
+      }
+    ],
+    "placeholders": [
+      {
+        "url": "https://images.unsplash.com/photo-1761882114165-e1616d042341?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Male model tattoos minimalist",
+        "category": "lookbook"
+      }
+    ]
+  },
+  "instructions_to_main_agent": [
+    "INSTALL 'lucide-react' for icons.",
+    "INSTALL 'framer-motion' for animations.",
+    "INSTALL 'three' '@types/three' '@react-three/fiber' '@react-three/drei' for 3D.",
+    "Use 'clsx' and 'tailwind-merge' for class management.",
+    "Do not use 'Inter' font. Import 'Bodoni Moda' and 'Manrope' from Google Fonts in index.css.",
+    "Ensure all images have 'object-cover' and 'grayscale' (optional hover: grayscale-0) class.",
+    "For the 3D viewer, create a dedicated component 'ProductViewer3D.jsx'.",
+    "Implement a 'CartDrawer' using Sheet component from Shadcn.",
+    "Use 'Sonner' for toast notifications."
+  ],
+  "universal_guidelines": [
+    "Avoid 'AI Slop': No generic centered layouts, no blue primary buttons.",
+    "Spacing: Use p-8, p-12, p-24. Don't be afraid of empty space.",
+    "Micro-interactions: Every button needs a hover state. Every page needs an entrance animation.",
+    "Accessibility: Ensure contrast ratios. Use semantic HTML.",
+    "Data-TestId: Add 'data-testid' to all interactive elements."
+  ]
+}
