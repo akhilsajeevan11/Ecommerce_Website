@@ -90,187 +90,189 @@ const ProductListPage = () => {
     </div>
   );
 
-  return (
-    <div className="page-transition" style={{ background: '#fff', minHeight: '100vh' }}>
-      <div style={{ padding: isMobile ? '32px 16px' : '48px 96px' }}>
-        <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-          
-          {/* Header */}
-          <div style={{ marginBottom: '32px' }}>
-            <h1 style={{ 
-              fontFamily: "'Bodoni Moda', serif", 
-              fontSize: isMobile ? '32px' : '48px', 
-              fontWeight: 700, 
-              letterSpacing: '-0.02em',
-              marginBottom: '8px'
-            }} data-testid="page-title">
-              All Products
-            </h1>
-            <p style={{ 
-              fontFamily: "'JetBrains Mono', monospace", 
-              fontSize: '12px', 
-              color: '#71717a'
-            }}>
-              {filteredProducts.length} {filteredProducts.length === 1 ? 'item' : 'items'}
-            </p>
-          </div>
-
-          {/* Mobile Filter Button */}
-          {isMobile && (
-            <div style={{ marginBottom: '24px' }}>
-              <Button 
-                variant="outline" 
-                style={{ borderRadius: 0 }}
-                onClick={() => setMobileFiltersOpen(true)}
-                data-testid="mobile-filter-btn"
-              >
-                <SlidersHorizontal style={{ width: '16px', height: '16px', marginRight: '8px' }} />
-                Filters
-              </Button>
-            </div>
-          )}
-
-          {/* Mobile Filters Overlay */}
-          {mobileFiltersOpen && isMobile && <MobileFiltersOverlay />}
-
-          {/* Main Layout */}
-          <div style={{ 
-            display: 'flex', 
-            gap: isMobile ? '0' : '48px',
-            flexDirection: isMobile ? 'column' : 'row'
-          }}>
+    return (
+      <div className="page-transition" style={{ background: '#fff', minHeight: '100vh' }}>
+        <div style={{ padding: isMobile ? '32px 16px' : '64px 48px' }}>
+          <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
             
-            {/* Desktop Sidebar */}
-            {!isMobile && (
-              <aside style={{ width: '200px', flexShrink: 0 }}>
-                <div style={{ position: 'sticky', top: '100px' }}>
-                  <h2 style={{ 
-                    fontFamily: "'Bodoni Moda', serif", 
-                    fontSize: '18px', 
-                    fontWeight: 700, 
-                    marginBottom: '24px' 
-                  }}>
-                    Filters
-                  </h2>
-                  <FilterContent 
-                    categories={categories}
-                    selectedCategories={selectedCategories}
-                    toggleCategory={toggleCategory}
-                    priceRange={priceRange}
-                    setPriceRange={setPriceRange}
-                    maxPrice={maxPrice}
-                  />
-                </div>
-              </aside>
+            {/* Header */}
+            <div style={{ marginBottom: '48px' }}>
+              <h1 style={{ 
+                fontFamily: "'Bodoni Moda', serif", 
+                fontSize: isMobile ? '36px' : '56px', 
+                fontWeight: 700, 
+                letterSpacing: '-0.02em',
+                marginBottom: '8px',
+                lineHeight: 1
+              }} data-testid="page-title">
+                All Products
+              </h1>
+              <p style={{ 
+                fontFamily: "'JetBrains Mono', monospace", 
+                fontSize: '11px', 
+                letterSpacing: '0.05em',
+                color: '#71717a',
+                textTransform: 'lowercase'
+              }}>
+                {filteredProducts.length} {filteredProducts.length === 1 ? 'item' : 'items'}
+              </p>
+            </div>
+
+            {/* Mobile Filter Button */}
+            {isMobile && (
+              <div style={{ marginBottom: '24px' }}>
+                <Button 
+                  variant="outline" 
+                  style={{ borderRadius: 0, width: '100%', justifyContent: 'flex-start', height: '44px' }}
+                  onClick={() => setMobileFiltersOpen(true)}
+                  data-testid="mobile-filter-btn"
+                >
+                  <SlidersHorizontal style={{ width: '16px', height: '16px', marginRight: '12px' }} />
+                  Filters
+                </Button>
+              </div>
             )}
 
-            {/* Products Grid */}
-            <div style={{ flex: 1, minWidth: 0 }}>
-              {filteredProducts.length > 0 ? (
-                <div style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)',
-                  gap: isMobile ? '16px' : '24px'
-                }}>
-                  {filteredProducts.map((product, index) => (
-                    <motion.div
-                      key={product.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: index * 0.03 }}
-                    >
-                      <ProductCard product={product} />
-                    </motion.div>
-                  ))}
-                </div>
-              ) : (
-                <div style={{ textAlign: 'center', padding: '96px 0' }}>
-                  <p style={{ fontFamily: "'JetBrains Mono', monospace", color: '#71717a' }}>
-                    No products found
-                  </p>
-                </div>
+            {/* Mobile Filters Overlay */}
+            {mobileFiltersOpen && isMobile && <MobileFiltersOverlay />}
+
+            {/* Main Layout */}
+            <div style={{ 
+              display: 'flex', 
+              gap: isMobile ? '0' : '64px',
+              flexDirection: isMobile ? 'column' : 'row'
+            }}>
+              
+              {/* Desktop Sidebar */}
+              {!isMobile && (
+                <aside style={{ width: '220px', flexShrink: 0 }}>
+                  <div style={{ position: 'sticky', top: '120px' }}>
+                    <h2 style={{ 
+                      fontFamily: "'Bodoni Moda', serif", 
+                      fontSize: '20px', 
+                      fontWeight: 700, 
+                      marginBottom: '32px',
+                      letterSpacing: '-0.01em'
+                    }}>
+                      Filters
+                    </h2>
+                    <FilterContent 
+                      categories={categories}
+                      selectedCategories={selectedCategories}
+                      toggleCategory={toggleCategory}
+                      priceRange={priceRange}
+                      setPriceRange={setPriceRange}
+                      maxPrice={maxPrice}
+                    />
+                  </div>
+                </aside>
               )}
+
+              {/* Products Grid */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                {filteredProducts.length > 0 ? (
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)',
+                    gap: isMobile ? '16px' : '32px'
+                  }}>
+                    {filteredProducts.map((product, index) => (
+                      <motion.div
+                        key={product.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: index * 0.03 }}
+                      >
+                        <ProductCard product={product} />
+                      </motion.div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ textAlign: 'center', padding: '96px 0' }}>
+                    <p style={{ fontFamily: "'JetBrains Mono', monospace", color: '#71717a', fontSize: '13px' }}>
+                      No products found
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </div>
+    );
+  };
+
+  // Filter Content Component
+  const FilterContent = ({ categories, selectedCategories, toggleCategory, priceRange, setPriceRange, maxPrice }) => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
+      {/* Category Filter */}
+      <div>
+        <h3 style={{ 
+          fontFamily: "'Bodoni Moda', serif", 
+          fontSize: '16px', 
+          marginBottom: '20px',
+          fontWeight: 700
+        }}>
+          Category
+        </h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          {categories.map(category => (
+            <div key={category} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <Checkbox
+                id={`cat-${category}`}
+                checked={selectedCategories.includes(category)}
+                onCheckedChange={() => toggleCategory(category)}
+                style={{ borderRadius: 0, width: '18px', height: '18px' }}
+                data-testid={`filter-category-${category}`}
+              />
+              <Label 
+                htmlFor={`cat-${category}`} 
+                style={{ 
+                  fontFamily: "'Manrope', sans-serif", 
+                  fontSize: '13px', 
+                  cursor: 'pointer',
+                  fontWeight: 500,
+                  color: '#18181b'
+                }}
+              >
+                {category}
+              </Label>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Price Range Filter */}
+      <div>
+        <h3 style={{ 
+          fontFamily: "'Bodoni Moda', serif", 
+          fontSize: '16px', 
+          marginBottom: '20px',
+          fontWeight: 700
+        }}>
+          Price Range
+        </h3>
+        <Slider
+          min={0}
+          max={maxPrice}
+          step={100}
+          value={priceRange}
+          onValueChange={setPriceRange}
+          style={{ marginBottom: '16px' }}
+          data-testid="price-slider"
+        />
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          fontFamily: "'JetBrains Mono', monospace",
+          fontSize: '11px', 
+          color: '#71717a' 
+        }}>
+          <span>₹{priceRange[0].toLocaleString()}</span>
+          <span>₹{priceRange[1].toLocaleString()}</span>
+        </div>
+      </div>
     </div>
   );
-};
-
-// Filter Content Component
-const FilterContent = ({ categories, selectedCategories, toggleCategory, priceRange, setPriceRange, maxPrice }) => (
-  <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-    {/* Category Filter */}
-    <div>
-      <h3 style={{ 
-        fontFamily: "'JetBrains Mono', monospace", 
-        fontSize: '11px', 
-        letterSpacing: '0.1em', 
-        textTransform: 'uppercase', 
-        marginBottom: '16px',
-        fontWeight: 500
-      }}>
-        Category
-      </h3>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        {categories.map(category => (
-          <div key={category} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Checkbox
-              id={`cat-${category}`}
-              checked={selectedCategories.includes(category)}
-              onCheckedChange={() => toggleCategory(category)}
-              style={{ borderRadius: 0 }}
-              data-testid={`filter-category-${category}`}
-            />
-            <Label 
-              htmlFor={`cat-${category}`} 
-              style={{ 
-                fontFamily: "'Manrope', sans-serif", 
-                fontSize: '14px', 
-                cursor: 'pointer' 
-              }}
-            >
-              {category}
-            </Label>
-          </div>
-        ))}
-      </div>
-    </div>
-
-    {/* Price Range Filter */}
-    <div>
-      <h3 style={{ 
-        fontFamily: "'JetBrains Mono', monospace", 
-        fontSize: '11px', 
-        letterSpacing: '0.1em', 
-        textTransform: 'uppercase', 
-        marginBottom: '16px',
-        fontWeight: 500
-      }}>
-        Price Range
-      </h3>
-      <Slider
-        min={0}
-        max={maxPrice}
-        step={100}
-        value={priceRange}
-        onValueChange={setPriceRange}
-        style={{ marginBottom: '12px' }}
-        data-testid="price-slider"
-      />
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        fontFamily: "'JetBrains Mono', monospace",
-        fontSize: '11px', 
-        color: '#71717a' 
-      }}>
-        <span>₹{priceRange[0].toLocaleString()}</span>
-        <span>₹{priceRange[1].toLocaleString()}</span>
-      </div>
-    </div>
-  </div>
-);
 
 export default ProductListPage;

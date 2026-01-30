@@ -65,27 +65,35 @@ const ProductCard = ({ product }) => {
             position: 'absolute',
             top: '12px',
             right: '12px',
-            width: '36px',
-            height: '36px',
+            width: '32px',
+            height: '32px',
             background: '#fff',
             border: '1px solid #e4e4e7',
-            borderRadius: '4px',
+            borderRadius: '0px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
-            transition: 'border-color 0.2s'
+            transition: 'all 0.2s',
+            zIndex: 10
           }}
-          onMouseOver={(e) => e.currentTarget.style.borderColor = '#000'}
-          onMouseOut={(e) => e.currentTarget.style.borderColor = '#e4e4e7'}
+          onMouseOver={(e) => {
+            e.currentTarget.style.borderColor = '#000';
+            e.currentTarget.style.transform = 'scale(1.05)';
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.borderColor = '#e4e4e7';
+            e.currentTarget.style.transform = 'scale(1)';
+          }}
           data-testid={`wishlist-btn-${product.id}`}
         >
           <Heart 
             style={{ 
-              width: '18px', 
-              height: '18px',
+              width: '16px', 
+              height: '16px',
               fill: isInWishlist ? '#000' : 'none',
-              stroke: '#000'
+              stroke: '#000',
+              strokeWidth: 1.5
             }}
           />
         </button>
@@ -94,10 +102,11 @@ const ProductCard = ({ product }) => {
       {/* Product Info */}
       <div>
         <h3 style={{ 
-          fontFamily: "'Manrope', sans-serif", 
-          fontSize: '14px', 
-          fontWeight: 500,
-          marginBottom: '4px'
+          fontFamily: "'Bodoni Moda', serif", 
+          fontSize: '16px', 
+          fontWeight: 700,
+          marginBottom: '4px',
+          letterSpacing: '-0.01em'
         }}>
           {product.name}
         </h3>
@@ -105,7 +114,8 @@ const ProductCard = ({ product }) => {
           fontFamily: "'JetBrains Mono', monospace", 
           fontSize: '11px', 
           color: '#71717a',
-          marginBottom: '8px'
+          marginBottom: '12px',
+          textTransform: 'lowercase'
         }}>
           {product.category}
         </p>
@@ -116,23 +126,24 @@ const ProductCard = ({ product }) => {
         }}>
           <span style={{ 
             fontFamily: "'JetBrains Mono', monospace", 
-            fontSize: '13px', 
-            fontWeight: 600 
+            fontSize: '14px', 
+            fontWeight: 600,
+            color: '#000'
           }}>
             ₹{product.price?.toFixed(2)}
           </span>
-          {product.rating > 0 && (
-            <span style={{ 
-              fontFamily: "'JetBrains Mono', monospace", 
-              fontSize: '11px', 
-              color: '#71717a',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px'
-            }}>
-              ★ {product.rating?.toFixed(1)} ({product.review_count || 0})
-            </span>
-          )}
+          <div style={{ 
+            fontFamily: "'JetBrains Mono', monospace", 
+            fontSize: '11px', 
+            color: '#a1a1aa',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px'
+          }}>
+            <span style={{ color: '#000' }}>★</span>
+            <span style={{ color: '#71717a' }}>{product.rating?.toFixed(1)}</span>
+            <span style={{ color: '#a1a1aa' }}>({product.reviews_count || product.review_count || 0})</span>
+          </div>
         </div>
       </div>
     </Link>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Heart, Star, Box, RotateCcw, Sparkles } from 'lucide-react';
+import { ArrowRight, Box, RotateCcw, Sparkles, Heart } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8001';
 
@@ -35,37 +36,40 @@ const HomePage = () => {
       <section style={{ position: 'relative', height: 'calc(100vh - 64px)', background: '#000', color: '#fff' }}>
         <div style={{ position: 'absolute', inset: 0 }}>
           <img
-            src="https://images.unsplash.com/photo-1765306552441-cd32bb216b0c?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920"
+            src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2070&auto=format&fit=crop"
             alt="Hero"
-            style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.5 }}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.7, filter: 'grayscale(100%)' }}
           />
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.2)' }} />
         </div>
         <div style={{ position: 'relative', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}>
           <div style={{ textAlign: 'center' }}>
-            <h1 className="heading-font" style={{ fontSize: 'clamp(3rem, 10vw, 7rem)', fontWeight: 400, marginBottom: '24px', lineHeight: 1.1, fontStyle: 'italic' }}>
+            <h1 className="heading-font" style={{ fontSize: 'clamp(3.5rem, 12vw, 8rem)', fontWeight: 400, marginBottom: '16px', lineHeight: 0.9, letterSpacing: '-0.02em' }}>
               MONOCHROME
               <br />
               LUXURY
             </h1>
-            <p className="mono-font" style={{ fontSize: '11px', letterSpacing: '0.3em', textTransform: 'uppercase', marginBottom: '40px', color: '#a1a1aa' }}>
+            <p className="mono-font" style={{ fontSize: '12px', letterSpacing: '0.4em', textTransform: 'uppercase', marginBottom: '40px', color: '#fff', opacity: 0.9 }}>
               Timeless Fashion in Black & White
             </p>
             <Link to="/shop">
               <button style={{ 
-                borderRadius: '4px', 
+                borderRadius: '0px', 
                 background: '#fff', 
                 color: '#000', 
-                padding: '12px 28px', 
+                padding: '14px 32px', 
                 fontSize: '14px', 
+                fontWeight: 500,
                 border: 'none',
                 cursor: 'pointer',
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '8px',
-                fontFamily: 'inherit'
+                gap: '12px',
+                fontFamily: 'inherit',
+                transition: 'all 0.3s ease'
               }}>
                 Shop Now
-                <ArrowRight style={{ width: '16px', height: '16px' }} />
+                <ArrowRight style={{ width: '18px', height: '18px' }} />
               </button>
             </Link>
           </div>
@@ -99,51 +103,48 @@ const HomePage = () => {
             </Link>
           </div>
           
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '32px' }}>
             {featuredProducts.map(product => (
-              <Link key={product.id} to={`/product/${product.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                <div style={{ position: 'relative' }}>
-                  <div style={{ position: 'relative', aspectRatio: '3/4', overflow: 'hidden', background: '#f4f4f5', marginBottom: '16px' }}>
-                    <img 
-                      src={product.images?.[0] || 'https://via.placeholder.com/400x500'} 
+              <motion.div
+                key={product.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+              >
+                <Link 
+                  to={`/product/${product.id}`} 
+                  style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
+                >
+                  <div style={{ position: 'relative', overflow: 'hidden', background: '#f4f4f5', marginBottom: '16px' }}>
+                    <img
+                      src={product.images?.[0] || 'https://via.placeholder.com/400x500'}
                       alt={product.name}
-                      className="grayscale-image"
-                      style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'filter 0.4s ease, transform 0.5s ease' }}
+                      style={{ width: '100%', aspectRatio: '3/4', objectFit: 'cover', filter: 'grayscale(100%)', transition: 'all 0.4s ease' }}
+                      onMouseOver={(e) => { e.target.style.filter = 'grayscale(0%)'; e.target.style.transform = 'scale(1.05)'; }}
+                      onMouseOut={(e) => { e.target.style.filter = 'grayscale(100%)'; e.target.style.transform = 'scale(1)'; }}
                     />
-                    <button 
-                      style={{ 
-                        position: 'absolute', 
-                        top: '12px', 
-                        right: '12px', 
-                        background: '#fff', 
-                        border: '1px solid #e4e4e7',
-                        borderRadius: '4px',
-                        width: '36px',
-                        height: '36px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: 'pointer'
+                    <button
+                      style={{
+                        position: 'absolute', top: '12px', right: '12px', width: '32px', height: '32px',
+                        background: '#fff', border: '1px solid #e4e4e7', borderRadius: '0px',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
                       }}
                       onClick={(e) => e.preventDefault()}
                     >
-                      <Heart style={{ width: '18px', height: '18px' }} />
+                      <Heart style={{ width: '16px', height: '16px', stroke: '#000' }} />
                     </button>
                   </div>
-                  <h3 className="body-font" style={{ fontSize: '15px', fontWeight: 500, marginBottom: '4px' }}>{product.name}</h3>
-                  <p style={{ fontSize: '13px', color: '#71717a', marginBottom: '8px' }}>{product.category}</p>
+                  <h3 style={{ fontFamily: "'Bodoni Moda', serif", fontSize: '16px', fontWeight: 700, marginBottom: '4px' }}>{product.name}</h3>
+                  <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '11px', color: '#71717a', marginBottom: '12px', textTransform: 'lowercase' }}>{product.category}</p>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span className="mono-font" style={{ fontSize: '14px', fontWeight: 600 }}>₹{product.price?.toFixed(2)}</span>
-                    {product.rating && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#71717a', fontSize: '13px' }}>
-                        <Star style={{ width: '14px', height: '14px', fill: '#000', stroke: '#000' }} />
-                        <span>{product.rating}</span>
-                        <span>({product.reviews_count || 0})</span>
-                      </div>
-                    )}
+                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '14px', fontWeight: 600 }}>₹{product.price?.toFixed(2)}</span>
+                    <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '11px', color: '#71717a', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <span style={{ color: '#000' }}>★</span> {product.rating?.toFixed(1)} ({product.reviews_count || 0})
+                    </div>
                   </div>
-                </div>
-              </Link>
+                </Link>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -250,3 +251,4 @@ const HomePage = () => {
 };
 
 export default HomePage;
+

@@ -40,7 +40,7 @@ const Navigation = () => {
         top: 0,
         zIndex: 50,
         backgroundColor: '#ffffff',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
+        borderBottom: '1px solid #f4f4f5'
       }}>
         <div style={{
           maxWidth: '1400px',
@@ -51,18 +51,18 @@ const Navigation = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            height: '64px'
+            height: '80px'
           }}>
             {/* Logo - Left */}
             <div style={{ flex: '1 1 0%' }}>
               <Link 
                 to="/" 
                 data-testid="logo-link" 
-                className="heading-font"
                 style={{
-                  fontSize: '20px',
-                  fontWeight: 'bold',
-                  letterSpacing: '-0.5px',
+                  fontFamily: "'Bodoni Moda', serif",
+                  fontSize: '24px',
+                  fontWeight: 700,
+                  letterSpacing: '0.05em',
                   textDecoration: 'none',
                   color: '#000000'
                 }}
@@ -75,7 +75,7 @@ const Navigation = () => {
             <div className="desktop-only-flex" style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '32px'
+              gap: '40px'
             }}>
               {navLinks.map(link => {
                 const isActive = location.pathname === link.path;
@@ -84,13 +84,15 @@ const Navigation = () => {
                     key={link.path}
                     to={link.path}
                     data-testid={`nav-${link.label.toLowerCase()}`}
-                    className="body-font"
                     style={{
-                      fontSize: '14px',
+                      fontFamily: "'Manrope', sans-serif",
+                      fontSize: '13px',
                       textDecoration: 'none',
                       color: '#000000',
                       borderBottom: isActive ? '1px solid #000000' : 'none',
-                      paddingBottom: '2px'
+                      paddingBottom: '4px',
+                      letterSpacing: '0.05em',
+                      fontWeight: isActive ? 600 : 400
                     }}
                   >
                     {link.label}
@@ -105,7 +107,7 @@ const Navigation = () => {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'flex-end',
-              gap: '16px'
+              gap: '24px'
             }}>
               <CartDrawer>
                 <button
@@ -118,7 +120,7 @@ const Navigation = () => {
                   }}
                   data-testid="cart-btn"
                 >
-                  <ShoppingCart style={{ width: '20px', height: '20px' }} />
+                  <ShoppingCart style={{ width: '20px', height: '20px', strokeWidth: 1.5 }} />
                   {cartItemCount > 0 && (
                     <span style={{
                       position: 'absolute',
@@ -126,9 +128,9 @@ const Navigation = () => {
                       right: '0',
                       backgroundColor: '#000000',
                       color: '#ffffff',
-                      fontSize: '10px',
-                      width: '16px',
-                      height: '16px',
+                      fontSize: '9px',
+                      width: '15px',
+                      height: '15px',
                       borderRadius: '50%',
                       display: 'flex',
                       alignItems: 'center',
@@ -153,7 +155,7 @@ const Navigation = () => {
                       }}
                       data-testid="user-menu-btn"
                     >
-                      <User style={{ width: '20px', height: '20px' }} />
+                      <User style={{ width: '20px', height: '20px', strokeWidth: 1.5 }} />
                     </button>
                   </SheetTrigger>
                   <SheetContent side="right" className="w-80">
@@ -187,11 +189,13 @@ const Navigation = () => {
                     background: '#000000',
                     color: '#ffffff',
                     border: 'none',
-                    borderRadius: '6px',
-                    padding: '8px 20px',
-                    fontSize: '14px',
+                    borderRadius: '0px',
+                    padding: '10px 24px',
+                    fontSize: '13px',
+                    fontWeight: 600,
                     cursor: 'pointer',
-                    fontFamily: 'inherit'
+                    fontFamily: 'inherit',
+                    letterSpacing: '0.05em'
                   }}
                   onClick={() => handleAuth('login')} 
                   data-testid="login-btn"
