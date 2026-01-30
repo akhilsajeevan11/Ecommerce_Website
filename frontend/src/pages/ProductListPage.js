@@ -21,6 +21,8 @@ const ProductListPage = () => {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
+  const ALL_CATEGORIES = ["T-Shirt", "Hoodie", "Jacket", "Pants", "Shirt", "Sweater"];
+
   useEffect(() => {
     loadProducts();
     
@@ -35,20 +37,21 @@ const ProductListPage = () => {
     applyFilters();
   }, [products, selectedCategories, priceRange]);
 
-  const loadProducts = async () => {
-    try {
-      const response = await axios.get(`${API}/products`);
-      setProducts(response.data);
-      const uniqueCategories = [...new Set(response.data.map(p => p.category))];
-      setCategories(uniqueCategories);
-      const prices = response.data.map(p => p.price);
-      const max = Math.max(...prices, 50000);
-      setMaxPrice(max);
-      setPriceRange([0, max]);
-    } catch (error) {
-      console.error('Load products error:', error);
-    }
-  };
+    const loadProducts = async () => {
+      try {
+        const response = await axios.get(`${API}/products`);
+        setProducts(response.data);
+        // Ensure ALL_CATEGORIES are available for filtering
+        setCategories(ALL_CATEGORIES);
+        const prices = response.data.map(p => p.price);
+        const max = Math.max(...prices, 50000);
+        setMaxPrice(max);
+        setPriceRange([0, max]);
+      } catch (error) {
+        console.error('Load products error:', error);
+      }
+    };
+
 
   const applyFilters = () => {
     let filtered = products;
@@ -96,20 +99,20 @@ const ProductListPage = () => {
           <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
             
             {/* Header */}
-            <div style={{ marginBottom: '48px' }}>
+            <div style={{ marginBottom: '64px' }}>
               <h1 style={{ 
                 fontFamily: "'Bodoni Moda', serif", 
-                fontSize: isMobile ? '36px' : '56px', 
+                fontSize: isMobile ? '48px' : '72px', 
                 fontWeight: 700, 
                 letterSpacing: '-0.02em',
-                marginBottom: '8px',
+                marginBottom: '16px',
                 lineHeight: 1
               }} data-testid="page-title">
                 All Products
               </h1>
               <p style={{ 
                 fontFamily: "'JetBrains Mono', monospace", 
-                fontSize: '11px', 
+                fontSize: '12px', 
                 letterSpacing: '0.05em',
                 color: '#71717a',
                 textTransform: 'lowercase'
@@ -117,6 +120,7 @@ const ProductListPage = () => {
                 {filteredProducts.length} {filteredProducts.length === 1 ? 'item' : 'items'}
               </p>
             </div>
+
 
             {/* Mobile Filter Button */}
             {isMobile && (
@@ -204,21 +208,21 @@ const ProductListPage = () => {
 
     // Filter Content Component
     const FilterContent = ({ categories, selectedCategories, toggleCategory, priceRange, setPriceRange, maxPrice }) => (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '48px' }}>
         {/* Category Filter */}
         <div>
           <h3 style={{ 
             fontFamily: "'JetBrains Mono', monospace", 
             fontSize: '11px', 
-            marginBottom: '20px',
-            fontWeight: 500,
+            marginBottom: '24px',
+            fontWeight: 600,
             textTransform: 'uppercase',
-            letterSpacing: '0.1em',
+            letterSpacing: '0.2em',
             color: '#000'
           }}>
             Category
           </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {categories.map(category => (
               <div key={category} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <Checkbox
@@ -231,11 +235,12 @@ const ProductListPage = () => {
                 <Label 
                   htmlFor={`cat-${category}`} 
                   style={{ 
-                    fontFamily: "'JetBrains Mono', monospace", 
-                    fontSize: '12px', 
+                    fontFamily: "'Manrope', sans-serif", 
+                    fontSize: '13px', 
                     cursor: 'pointer',
                     fontWeight: 400,
-                    color: '#000'
+                    color: '#000',
+                    lineHeight: 1
                   }}
                 >
                   {category}
@@ -250,10 +255,10 @@ const ProductListPage = () => {
           <h3 style={{ 
             fontFamily: "'JetBrains Mono', monospace", 
             fontSize: '11px', 
-            marginBottom: '20px',
-            fontWeight: 500,
+            marginBottom: '24px',
+            fontWeight: 600,
             textTransform: 'uppercase',
-            letterSpacing: '0.1em',
+            letterSpacing: '0.2em',
             color: '#000'
           }}>
             Price Range
@@ -264,7 +269,7 @@ const ProductListPage = () => {
             step={100}
             value={priceRange}
             onValueChange={setPriceRange}
-            style={{ marginBottom: '16px' }}
+            style={{ marginBottom: '20px' }}
             data-testid="price-slider"
           />
           <div style={{ 
@@ -272,7 +277,8 @@ const ProductListPage = () => {
             justifyContent: 'space-between', 
             fontFamily: "'JetBrains Mono', monospace",
             fontSize: '11px', 
-            color: '#71717a' 
+            color: '#71717a',
+            letterSpacing: '0.05em'
           }}>
             <span>₹{priceRange[0].toLocaleString()}</span>
             <span>₹{priceRange[1].toLocaleString()}</span>
