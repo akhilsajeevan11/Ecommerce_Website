@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
 import { useAuth } from '../context/AppContext';
 import { toast } from 'sonner';
+import { X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const AuthModal = ({ open, onClose, mode, onModeChange }) => {
   const { login, register } = useAuth();
@@ -36,80 +34,223 @@ const AuthModal = ({ open, onClose, mode, onModeChange }) => {
     }
   };
 
+  if (!open) return null;
+
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[480px] p-12 border-none rounded-none bg-white shadow-2xl">
-          <DialogHeader className="space-y-4 mb-8 text-center sm:text-center">
-            <DialogTitle className="font-heading text-4xl font-medium">
+    <AnimatePresence>
+      <div 
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 100,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '24px'
+        }}
+      >
+        {/* Overlay */}
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.4)',
+            backdropFilter: 'blur(4px)'
+          }}
+        />
+
+        {/* Modal Content */}
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          style={{
+            position: 'relative',
+            width: '100%',
+            maxWidth: '480px',
+            backgroundColor: '#ffffff',
+            padding: '60px 48px',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+            zIndex: 101
+          }}
+        >
+          {/* Close Button */}
+          <button 
+            onClick={onClose}
+            style={{
+              position: 'absolute',
+              top: '24px',
+              right: '24px',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: '#000000',
+              padding: '4px'
+            }}
+          >
+            <X size={20} />
+          </button>
+
+          <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+            <h2 style={{ 
+              fontFamily: "'Bodoni Moda', serif", 
+              fontSize: '36px', 
+              fontWeight: 500,
+              margin: 0,
+              color: '#000000'
+            }}>
               {mode === 'login' ? 'Welcome Back' : 'Create Account'}
-            </DialogTitle>
-            <DialogDescription className="sr-only">
-              {mode === 'login' ? 'Login to your account' : 'Create a new account'}
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-8">
-              {mode === 'register' && (
-                <div className="space-y-1">
-                  <Label htmlFor="name" className="font-body text-[10px] tracking-[0.2em] uppercase text-black font-medium">Name</Label>
-                  <Input
-                    id="name"
-                    data-testid="auth-name-input"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="rounded-none border-b border-t-0 border-x-0 border-gray-200 focus-visible:ring-0 focus-visible:border-black p-0 h-10 transition-colors bg-transparent shadow-none font-body"
-                    required
-                  />
-                </div>
-              )}
-              <div className="space-y-1">
-                <Label htmlFor="email" className="font-body text-[10px] tracking-[0.2em] uppercase text-black font-medium">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  data-testid="auth-email-input"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="rounded-none border-b border-t-0 border-x-0 border-gray-200 focus-visible:ring-0 focus-visible:border-black p-0 h-10 transition-colors bg-transparent shadow-none font-body"
+            </h2>
+          </div>
+
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+            {mode === 'register' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <label style={{ 
+                  fontFamily: "'Manrope', sans-serif", 
+                  fontSize: '10px', 
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.2em',
+                  color: '#000000'
+                }}>
+                  Name
+                </label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '8px 0',
+                    border: 'none',
+                    borderBottom: '1px solid #e4e4e7',
+                    fontFamily: "'Manrope', sans-serif",
+                    fontSize: '14px',
+                    outline: 'none',
+                    transition: 'border-color 0.2s'
+                  }}
+                  onFocus={(e) => e.target.style.borderBottomColor = '#000000'}
+                  onBlur={(e) => e.target.style.borderBottomColor = '#e4e4e7'}
                   required
                 />
               </div>
-              <div className="space-y-1">
-                <Label htmlFor="password" className="font-body text-[10px] tracking-[0.2em] uppercase text-black font-medium">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  data-testid="auth-password-input"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="rounded-none border-b border-t-0 border-x-0 border-gray-200 focus-visible:ring-0 focus-visible:border-black p-0 h-10 transition-colors bg-transparent shadow-none font-body"
-                  required
-                />
-              </div>
-              <Button
-                type="submit"
-                className="w-full h-12 rounded-none bg-black text-white hover:bg-zinc-800 font-body text-xs tracking-[0.1em] transition-all uppercase"
-                disabled={loading}
-                data-testid="auth-submit-btn"
+            )}
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <label style={{ 
+                fontFamily: "'Manrope', sans-serif", 
+                fontSize: '10px', 
+                fontWeight: 600,
+                textTransform: 'uppercase',
+                letterSpacing: '0.2em',
+                color: '#000000'
+              }}>
+                Email
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '8px 0',
+                  border: 'none',
+                  borderBottom: '1px solid #e4e4e7',
+                  fontFamily: "'Manrope', sans-serif",
+                  fontSize: '14px',
+                  outline: 'none',
+                  transition: 'border-color 0.2s'
+                }}
+                onFocus={(e) => e.target.style.borderBottomColor = '#000000'}
+                onBlur={(e) => e.target.style.borderBottomColor = '#e4e4e7'}
+                required
+              />
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <label style={{ 
+                fontFamily: "'Manrope', sans-serif", 
+                fontSize: '10px', 
+                fontWeight: 600,
+                textTransform: 'uppercase',
+                letterSpacing: '0.2em',
+                color: '#000000'
+              }}>
+                Password
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '8px 0',
+                  border: 'none',
+                  borderBottom: '1px solid #e4e4e7',
+                  fontFamily: "'Manrope', sans-serif",
+                  fontSize: '14px',
+                  outline: 'none',
+                  transition: 'border-color 0.2s'
+                }}
+                onFocus={(e) => e.target.style.borderBottomColor = '#000000'}
+                onBlur={(e) => e.target.style.borderBottomColor = '#e4e4e7'}
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                width: '100%',
+                height: '52px',
+                backgroundColor: '#000000',
+                color: '#ffffff',
+                border: 'none',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                fontFamily: "'Manrope', sans-serif",
+                fontSize: '12px',
+                fontWeight: 600,
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+                marginTop: '12px',
+                transition: 'opacity 0.2s'
+              }}
+              onMouseOver={(e) => e.currentTarget.style.opacity = '0.9'}
+              onMouseOut={(e) => e.currentTarget.style.opacity = '1'}
+            >
+              {loading ? 'Processing...' : mode === 'login' ? 'Login' : 'Create Account'}
+            </button>
+
+            <div style={{ textAlign: 'center' }}>
+              <button
+                type="button"
+                onClick={() => onModeChange(mode === 'login' ? 'register' : 'login')}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontFamily: "'Manrope', sans-serif",
+                  fontSize: '11px',
+                  color: '#71717a'
+                }}
               >
-                {loading ? 'Processing...' : mode === 'login' ? 'Login' : 'Create Account'}
-              </Button>
-              <div className="text-center pt-2">
-                <button
-                  type="button"
-                  className="font-body text-[11px] tracking-wide text-black/80 hover:text-black transition-colors"
-                  onClick={() => onModeChange(mode === 'login' ? 'register' : 'login')}
-                  data-testid="auth-toggle-btn"
-                >
-                  {mode === 'login' ? (
-                    <>Don't have an account? <span className="underline underline-offset-4">Register</span></>
-                  ) : (
-                    <>Already have an account? <span className="underline underline-offset-4">Login</span></>
-                  )}
-                </button>
-              </div>
+                {mode === 'login' ? (
+                  <>Don't have an account? <span style={{ color: '#000000', textDecoration: 'underline' }}>Register</span></>
+                ) : (
+                  <>Already have an account? <span style={{ color: '#000000', textDecoration: 'underline' }}>Login</span></>
+                )}
+              </button>
+            </div>
           </form>
-        </DialogContent>
-    </Dialog>
+        </motion.div>
+      </div>
+    </AnimatePresence>
   );
 };
 
