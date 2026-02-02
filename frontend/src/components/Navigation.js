@@ -195,26 +195,27 @@ const Navigation = () => {
                     </div>
                   </SheetContent>
                 </Sheet>
-              ) : (
-                <button 
-                  style={{
-                    background: '#000000',
-                    color: '#ffffff',
-                    border: 'none',
-                    borderRadius: '0px',
-                    padding: '10px 24px',
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    fontFamily: 'inherit',
-                    letterSpacing: '0.05em'
-                  }}
-                  onClick={() => handleAuth('login')} 
-                  data-testid="login-btn"
-                >
-                  Login
-                </button>
-              )}
+                ) : (
+                  <button 
+                    style={{
+                      background: '#000000',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: '0px',
+                      padding: '10px 24px',
+                      fontSize: '12px',
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                      fontFamily: "'Manrope', sans-serif",
+                      letterSpacing: '0.1em',
+                      textTransform: 'uppercase'
+                    }}
+                    onClick={() => handleAuth('login')} 
+                    data-testid="login-btn"
+                  >
+                    Login
+                  </button>
+                )}
             </div>
 
             {/* Mobile menu button */}

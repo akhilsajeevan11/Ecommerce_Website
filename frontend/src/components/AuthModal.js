@@ -48,61 +48,61 @@ const AuthModal = ({ open, onClose, mode, onModeChange }) => {
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-8">
-          {mode === 'register' && (
+            {mode === 'register' && (
+              <div className="space-y-1">
+                <Label htmlFor="name" className="font-body text-[10px] tracking-[0.2em] uppercase text-black">Name</Label>
+                <Input
+                  id="name"
+                  data-testid="auth-name-input"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="rounded-none border-b border-t-0 border-x-0 border-gray-200 focus-visible:ring-0 focus-visible:border-black p-0 h-10 transition-colors bg-transparent shadow-none"
+                  required
+                />
+              </div>
+            )}
             <div className="space-y-1">
-              <Label htmlFor="name" className="font-mono text-[10px] tracking-[0.2em] uppercase text-black">Name</Label>
+              <Label htmlFor="email" className="font-body text-[10px] tracking-[0.2em] uppercase text-black">Email</Label>
               <Input
-                id="name"
-                data-testid="auth-name-input"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="rounded-none border-b border-t-0 border-x-0 border-gray-200 focus-visible:ring-0 focus-visible:border-black p-0 h-10 transition-colors bg-transparent"
+                id="email"
+                type="email"
+                data-testid="auth-email-input"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="rounded-none border-b border-t-0 border-x-0 border-gray-200 focus-visible:ring-0 focus-visible:border-black p-0 h-10 transition-colors bg-transparent shadow-none"
                 required
               />
             </div>
-          )}
-          <div className="space-y-1">
-            <Label htmlFor="email" className="font-mono text-[10px] tracking-[0.2em] uppercase text-black">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              data-testid="auth-email-input"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="rounded-none border-b border-t-0 border-x-0 border-gray-200 focus-visible:ring-0 focus-visible:border-black p-0 h-10 transition-colors bg-transparent"
-              required
-            />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="password" className="font-mono text-[10px] tracking-[0.2em] uppercase text-black">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              data-testid="auth-password-input"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="rounded-none border-b border-t-0 border-x-0 border-gray-200 focus-visible:ring-0 focus-visible:border-black p-0 h-10 transition-colors bg-transparent"
-              required
-            />
-          </div>
-          <Button
-            type="submit"
-            className="w-full h-12 rounded-none bg-black text-white hover:bg-zinc-800 font-mono text-xs tracking-[0.1em] transition-all"
-            disabled={loading}
-            data-testid="auth-submit-btn"
-          >
-            {loading ? 'Processing...' : mode === 'login' ? 'Login' : 'Create Account'}
-          </Button>
-          <div className="text-center pt-2">
-            <button
-              type="button"
-              className="font-mono text-[10px] tracking-widest text-black/60 hover:text-black transition-colors"
-              onClick={() => onModeChange(mode === 'login' ? 'register' : 'login')}
-              data-testid="auth-toggle-btn"
+            <div className="space-y-1">
+              <Label htmlFor="password" className="font-body text-[10px] tracking-[0.2em] uppercase text-black">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                data-testid="auth-password-input"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="rounded-none border-b border-t-0 border-x-0 border-gray-200 focus-visible:ring-0 focus-visible:border-black p-0 h-10 transition-colors bg-transparent shadow-none"
+                required
+              />
+            </div>
+            <Button
+              type="submit"
+              className="w-full h-12 rounded-none bg-black text-white hover:bg-zinc-800 font-body text-xs tracking-[0.05em] transition-all"
+              disabled={loading}
+              data-testid="auth-submit-btn"
             >
-              {mode === 'login' ? "Don't have an account? Register" : 'Already have an account? Login'}
-            </button>
-          </div>
+              {loading ? 'Processing...' : mode === 'login' ? 'Login' : 'Create Account'}
+            </Button>
+            <div className="text-center pt-2">
+              <button
+                type="button"
+                className="font-body text-[10px] tracking-wide text-black/60 hover:text-black transition-colors"
+                onClick={() => onModeChange(mode === 'login' ? 'register' : 'login')}
+                data-testid="auth-toggle-btn"
+              >
+                {mode === 'login' ? "Don't have an account? Register" : 'Already have an account? Login'}
+              </button>
+            </div>
         </form>
       </DialogContent>
     </Dialog>
