@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { ShoppingCart, Heart, User, Menu, X, LogOut, Package } from 'lucide-react';
 import { useAuth, useCart } from '../context/AppContext';
-import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from './ui/sheet';
 import { Button } from './ui/button';
 import AuthModal from './AuthModal';
 import CartDrawer from './CartDrawer';
@@ -164,8 +164,14 @@ const Navigation = () => {
                       <User style={{ width: '20px', height: '20px', strokeWidth: 1.5 }} />
                     </button>
                   </SheetTrigger>
-                  <SheetContent side="right" className="w-80">
-                    <div className="mt-8 space-y-4">
+                    <SheetContent side="right" className="w-80">
+                      <SheetHeader>
+                        <SheetTitle>User Menu</SheetTitle>
+                        <SheetDescription className="sr-only">
+                          Manage your account, wishlist, and orders.
+                        </SheetDescription>
+                      </SheetHeader>
+                      <div className="mt-8 space-y-4">
                       <div className="border-b border-gray-200 pb-4">
                         <p className="body-font text-sm text-gray-500">Signed in as</p>
                         <p className="font-medium truncate">{user.email}</p>

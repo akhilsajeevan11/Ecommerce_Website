@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from './ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from './ui/sheet';
 import { Button } from './ui/button';
 import { useCart, useAuth } from '../context/AppContext';
 import { X, Minus, Plus } from 'lucide-react';
@@ -59,9 +59,12 @@ const CartDrawer = ({ children }) => {
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>{children}</SheetTrigger>
         <SheetContent side="right" className="w-full sm:max-w-md bg-white border-l-0 p-0 flex flex-col">
-          <div className="p-6 pb-0 flex justify-between items-center">
-            <SheetTitle className="font-heading text-3xl font-normal tracking-tight">Shopping Cart</SheetTitle>
-          </div>
+            <div className="p-6 pb-0 flex justify-between items-center">
+              <SheetTitle className="font-heading text-3xl font-normal tracking-tight">Shopping Cart</SheetTitle>
+              <SheetDescription className="sr-only">
+                Review the items in your cart and proceed to checkout.
+              </SheetDescription>
+            </div>
           <div className="flex-1 flex flex-col p-6 overflow-hidden">
             {cart.items?.length === 0 ? (
               <div className="flex-1 flex items-center justify-center">
