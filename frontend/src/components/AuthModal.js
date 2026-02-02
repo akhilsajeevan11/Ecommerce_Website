@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -43,6 +43,9 @@ const AuthModal = ({ open, onClose, mode, onModeChange }) => {
           <DialogTitle className="font-heading text-4xl text-center font-medium">
             {mode === 'login' ? 'Welcome Back' : 'Create Account'}
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            {mode === 'login' ? 'Login to your account' : 'Create a new account'}
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-8">
           {mode === 'register' && (
