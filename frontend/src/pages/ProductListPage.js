@@ -269,7 +269,7 @@ const ProductListPage = () => {
             step={100}
             value={priceRange}
             onValueChange={setPriceRange}
-            style={{ marginBottom: '20px' }}
+            style={{ marginBottom: '16px' }}
             data-testid="price-slider"
           />
           <div style={{ 
@@ -280,8 +280,8 @@ const ProductListPage = () => {
             color: '#71717a',
             letterSpacing: '0.05em'
           }}>
-            <span>₹{priceRange[0].toLocaleString()}</span>
-            <span>₹{priceRange[1].toLocaleString()}</span>
+            <span>₹{priceRange[0]}</span>
+            <span>₹{priceRange[1]}</span>
           </div>
         </div>
       </div>
