@@ -28,7 +28,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://localhost:3001",
-        "https://ecommerce-website-nine-sooty.vercel.app",
+        "https://ecommerce-website-g53h-jhexn8q5q.vercel.app",
     ],
     allow_credentials=True,
     allow_methods=["*"],
