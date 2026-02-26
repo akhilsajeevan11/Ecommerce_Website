@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Button } from '../components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import ProductViewer3D from '../components/ProductViewer3D';
 import Product360Viewer from '../components/Product360Viewer';
 import { Heart, Star, Minus, Plus, ChevronLeft } from 'lucide-react';
-import { useAuth, useCart, useWishlist } from '../context/AppContext';
+import { useAuth, useCart, useWishlist, useAuthModal } from '../context/AppContext';
 import { toast } from 'sonner';
 import axios from 'axios';
 import { motion } from 'framer-motion';
@@ -19,6 +17,7 @@ const ProductDetailPage = () => {
   const { user, token } = useAuth();
   const { addToCart } = useCart();
   const { wishlist, addToWishlist, removeFromWishlist } = useWishlist();
+  const { openAuthModal } = useAuthModal();
   const [product, setProduct] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [selectedSize, setSelectedSize] = useState('');
@@ -27,6 +26,13 @@ const ProductDetailPage = () => {
   const [quantity, setQuantity] = useState(1);
   const [viewMode, setViewMode] = useState('image');
   const [reviewForm, setReviewForm] = useState({ rating: 5, comment: '' });
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     loadProduct();
@@ -55,195 +61,144 @@ const ProductDetailPage = () => {
   };
 
   const handleAddToCart = async () => {
-    if (!selectedSize || !selectedColor) {
-      toast.error('Please select size and color');
-      return;
-    }
+    if (!user) { openAuthModal('login'); return; }
+    if (!selectedSize || !selectedColor) { toast.error('Please select size and color'); return; }
     await addToCart(product, selectedSize, selectedColor, quantity);
     toast.success('Added to cart');
   };
 
   const handleWishlist = () => {
-    if (!user) {
-      toast.error('Please login to add to wishlist');
-      return;
-    }
+    if (!user) { openAuthModal('login'); return; }
     const inWishlist = wishlist?.items?.includes(product.id);
-    if (inWishlist) {
-      removeFromWishlist(product.id);
-      toast.success('Removed from wishlist');
-    } else {
-      addToWishlist(product.id);
-      toast.success('Added to wishlist');
-    }
+    if (inWishlist) { removeFromWishlist(product.id); toast.success('Removed from wishlist'); }
+    else { addToWishlist(product.id); toast.success('Added to wishlist'); }
   };
 
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
-    if (!token) {
-      toast.error('Please login to review');
-      return;
-    }
+    if (!token) { openAuthModal('login'); return; }
     try {
       await axios.post(`${API}/reviews`, {
-        product_id: id,
-        rating: reviewForm.rating,
-        comment: reviewForm.comment
+        product_id: id, rating: reviewForm.rating, comment: reviewForm.comment
       }, { headers: { Authorization: `Bearer ${token}` } });
       toast.success('Review submitted');
       setReviewForm({ rating: 5, comment: '' });
       loadReviews();
       loadProduct();
-    } catch (error) {
-      toast.error('Failed to submit review');
-    }
+    } catch (error) { toast.error('Failed to submit review'); }
   };
 
   if (!product) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: '24px', height: '24px', border: '2px solid #000', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
       </div>
     );
   }
 
   const isInWishlist = wishlist?.items?.includes(product.id);
+  const pad = isMobile ? '16px' : '48px';
 
   return (
-    <div className="page-transition">
+    <div style={{ background: '#fff', minHeight: '100vh' }}>
       {/* Breadcrumb */}
-      <div className="px-6 md:px-12 lg:px-24 py-6">
-        <Link to="/shop" className="inline-flex items-center gap-2 mono-font text-xs text-zinc-400 hover:text-black transition-colors">
-          <ChevronLeft className="w-4 h-4" />
+      <div style={{ padding: `24px ${pad}` }}>
+        <Link to="/shop" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontFamily: "'JetBrains Mono', monospace", fontSize: '12px', color: '#a1a1aa', textDecoration: 'none' }}>
+          <ChevronLeft style={{ width: '16px', height: '16px' }} />
           Back to Shop
         </Link>
       </div>
 
-      <div className="px-6 md:px-12 lg:px-24 pb-24">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
-            
+      <div style={{ padding: `0 ${pad} 96px` }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? '32px' : '80px' }}>
+
             {/* Left: Images */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.4 }}
-            >
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
               <Tabs value={viewMode} onValueChange={setViewMode}>
                 {(product.model_3d_url || product.images_360?.length > 0) && (
-                  <TabsList className="w-full rounded-none bg-zinc-100 mb-6">
-                    <TabsTrigger value="image" className="rounded-none flex-1" data-testid="view-image-tab">Images</TabsTrigger>
-                    {product.model_3d_url && (
-                      <TabsTrigger value="3d" className="rounded-none flex-1" data-testid="view-3d-tab">3D</TabsTrigger>
-                    )}
-                    {product.images_360?.length > 0 && (
-                      <TabsTrigger value="360" className="rounded-none flex-1" data-testid="view-360-tab">360°</TabsTrigger>
-                    )}
+                  <TabsList style={{ width: '100%', borderRadius: 0, background: '#f4f4f5', marginBottom: '24px', display: 'flex' }}>
+                    <TabsTrigger value="image" style={{ flex: 1, borderRadius: 0 }} data-testid="view-image-tab">Images</TabsTrigger>
+                    {product.model_3d_url && <TabsTrigger value="3d" style={{ flex: 1, borderRadius: 0 }} data-testid="view-3d-tab">3D</TabsTrigger>}
+                    {product.images_360?.length > 0 && <TabsTrigger value="360" style={{ flex: 1, borderRadius: 0 }} data-testid="view-360-tab">360°</TabsTrigger>}
                   </TabsList>
                 )}
 
-                <TabsContent value="image" className="mt-0">
-                  {/* Main Image */}
-                  <div className="relative bg-zinc-50 mb-4">
+                <TabsContent value="image" style={{ marginTop: 0 }}>
+                  <div style={{ position: 'relative', background: '#fafafa', marginBottom: '16px', overflow: 'hidden' }}>
                     <img
                       src={product.images?.[selectedImage] || product.images?.[0]}
                       alt={product.name}
-                      className="w-full aspect-[4/5] object-cover grayscale-image"
+                      style={{ width: '100%', aspectRatio: '4/5', objectFit: 'cover', filter: 'grayscale(100%)', transition: 'filter 0.4s ease, transform 0.5s ease' }}
+                      onMouseOver={(e) => { e.target.style.filter = 'grayscale(0%)'; e.target.style.transform = 'scale(1.03)'; }}
+                      onMouseOut={(e) => { e.target.style.filter = 'grayscale(100%)'; e.target.style.transform = 'scale(1)'; }}
                     />
-                    <button
-                      onClick={handleWishlist}
-                      className="absolute top-4 right-4 w-10 h-10 bg-white flex items-center justify-center border border-zinc-200 hover:border-black transition-colors"
-                      data-testid="wishlist-btn"
-                    >
-                      <Heart className={`w-5 h-5 ${isInWishlist ? 'fill-black' : ''}`} />
+                    <button onClick={handleWishlist} data-testid="wishlist-btn" style={{
+                      position: 'absolute', top: '16px', right: '16px', width: '40px', height: '40px',
+                      background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      border: '1px solid #e4e4e7', cursor: 'pointer', borderRadius: 0
+                    }}>
+                      <Heart style={{ width: '20px', height: '20px', fill: isInWishlist ? '#000' : 'none', stroke: '#000' }} />
                     </button>
                   </div>
-                  
-                  {/* Thumbnails */}
                   {product.images?.length > 1 && (
-                    <div className="flex gap-2">
+                    <div style={{ display: 'flex', gap: '8px' }}>
                       {product.images.map((img, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => setSelectedImage(idx)}
-                          className={`w-16 h-20 overflow-hidden border-2 transition-colors ${
-                            selectedImage === idx ? 'border-black' : 'border-zinc-200 hover:border-zinc-400'
-                          }`}
-                        >
-                          <img src={img} alt="" className="w-full h-full object-cover" />
+                        <button key={idx} onClick={() => setSelectedImage(idx)} style={{
+                          width: '64px', height: '80px', overflow: 'hidden', border: selectedImage === idx ? '2px solid #000' : '2px solid #e4e4e7',
+                          cursor: 'pointer', padding: 0, background: 'none', borderRadius: 0
+                        }}>
+                          <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         </button>
                       ))}
                     </div>
                   )}
                 </TabsContent>
-
-                <TabsContent value="3d" className="mt-0">
-                  <div className="aspect-[4/5] bg-zinc-50">
-                    <ProductViewer3D modelUrl={product.model_3d_url} />
-                  </div>
+                <TabsContent value="3d" style={{ marginTop: 0 }}>
+                  <div style={{ aspectRatio: '4/5', background: '#fafafa' }}><ProductViewer3D modelUrl={product.model_3d_url} /></div>
                 </TabsContent>
-
-                <TabsContent value="360" className="mt-0">
-                  <div className="aspect-[4/5] bg-zinc-50">
-                    <Product360Viewer images={product.images_360} />
-                  </div>
+                <TabsContent value="360" style={{ marginTop: 0 }}>
+                  <div style={{ aspectRatio: '4/5', background: '#fafafa' }}><Product360Viewer images={product.images_360} /></div>
                 </TabsContent>
               </Tabs>
             </motion.div>
 
             {/* Right: Product Info */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.4, delay: 0.1 }}
-              className="lg:pt-8"
-            >
-              {/* Category */}
-              <p className="mono-font text-xs tracking-widest text-zinc-400 uppercase mb-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, delay: 0.1 }} style={{ paddingTop: isMobile ? 0 : '32px' }}>
+              <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '11px', letterSpacing: '0.2em', color: '#a1a1aa', textTransform: 'uppercase', marginBottom: '16px' }}>
                 {product.category}
               </p>
-
-              {/* Name */}
-              <h1 className="heading-font text-3xl md:text-4xl font-bold tracking-tight mb-6" data-testid="product-title">
+              <h1 style={{ fontFamily: "'Bodoni Moda', serif", fontSize: isMobile ? '28px' : '36px', fontWeight: 700, letterSpacing: '-0.02em', marginBottom: '24px', lineHeight: 1.1 }} data-testid="product-title">
                 {product.name}
               </h1>
-
-              {/* Price & Rating */}
-              <div className="flex items-center gap-6 mb-8">
-                <span className="mono-font text-2xl font-bold">₹{product.price?.toFixed(2)}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '24px', marginBottom: '32px' }}>
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '24px', fontWeight: 700 }}>₹{product.price?.toFixed(2)}</span>
                 {product.rating > 0 && (
-                  <div className="flex items-center gap-2">
-                    <Star className="w-4 h-4 fill-black" />
-                    <span className="mono-font text-sm">{product.rating.toFixed(1)}</span>
-                    <span className="mono-font text-sm text-zinc-400">({product.review_count})</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Star style={{ width: '16px', height: '16px', fill: '#000' }} />
+                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '14px' }}>{product.rating.toFixed(1)}</span>
+                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '14px', color: '#a1a1aa' }}>({product.review_count})</span>
                   </div>
                 )}
               </div>
-
-              {/* Description */}
-              <p className="body-font text-zinc-600 leading-relaxed mb-8">
+              <p style={{ fontFamily: "'Manrope', sans-serif", color: '#52525b', lineHeight: 1.7, marginBottom: '32px', fontSize: '15px' }}>
                 {product.description}
               </p>
 
-              <div className="border-t border-zinc-200 pt-8 space-y-6">
+              <div style={{ borderTop: '1px solid #e4e4e7', paddingTop: '32px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
                 {/* Size */}
                 {product.sizes?.length > 0 && (
                   <div>
-                    <label className="mono-font text-xs tracking-widest uppercase mb-3 block">Size</label>
-                    <div className="flex flex-wrap gap-2">
+                    <label style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '11px', letterSpacing: '0.2em', textTransform: 'uppercase', display: 'block', marginBottom: '12px' }}>Size</label>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                       {product.sizes.map(size => (
-                        <button
-                          key={size}
-                          onClick={() => setSelectedSize(size)}
-                          className={`min-w-[48px] h-11 px-4 mono-font text-sm border transition-colors ${
-                            selectedSize === size
-                              ? 'bg-black text-white border-black'
-                              : 'bg-white text-black border-zinc-200 hover:border-black'
-                          }`}
-                          data-testid={`size-${size}`}
-                        >
-                          {size}
-                        </button>
+                        <button key={size} onClick={() => setSelectedSize(size)} data-testid={`size-${size}`} style={{
+                          minWidth: '48px', height: '44px', padding: '0 16px', fontFamily: "'JetBrains Mono', monospace", fontSize: '13px',
+                          border: selectedSize === size ? '1px solid #000' : '1px solid #e4e4e7',
+                          background: selectedSize === size ? '#000' : '#fff',
+                          color: selectedSize === size ? '#fff' : '#000',
+                          cursor: 'pointer', borderRadius: 0, transition: 'all 0.2s'
+                        }}>{size}</button>
                       ))}
                     </div>
                   </div>
@@ -252,21 +207,16 @@ const ProductDetailPage = () => {
                 {/* Color */}
                 {product.colors?.length > 0 && (
                   <div>
-                    <label className="mono-font text-xs tracking-widest uppercase mb-3 block">Color</label>
-                    <div className="flex flex-wrap gap-2">
+                    <label style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '11px', letterSpacing: '0.2em', textTransform: 'uppercase', display: 'block', marginBottom: '12px' }}>Color</label>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                       {product.colors.map(color => (
-                        <button
-                          key={color}
-                          onClick={() => setSelectedColor(color)}
-                          className={`min-w-[72px] h-11 px-4 mono-font text-xs border transition-colors ${
-                            selectedColor === color
-                              ? 'bg-black text-white border-black'
-                              : 'bg-white text-black border-zinc-200 hover:border-black'
-                          }`}
-                          data-testid={`color-${color}`}
-                        >
-                          {color}
-                        </button>
+                        <button key={color} onClick={() => setSelectedColor(color)} data-testid={`color-${color}`} style={{
+                          minWidth: '72px', height: '44px', padding: '0 16px', fontFamily: "'JetBrains Mono', monospace", fontSize: '12px',
+                          border: selectedColor === color ? '1px solid #000' : '1px solid #e4e4e7',
+                          background: selectedColor === color ? '#000' : '#fff',
+                          color: selectedColor === color ? '#fff' : '#000',
+                          cursor: 'pointer', borderRadius: 0, transition: 'all 0.2s'
+                        }}>{color}</button>
                       ))}
                     </div>
                   </div>
@@ -274,37 +224,29 @@ const ProductDetailPage = () => {
 
                 {/* Quantity */}
                 <div>
-                  <label className="mono-font text-xs tracking-widest uppercase mb-3 block">Quantity</label>
-                  <div className="inline-flex items-center border border-zinc-200">
-                    <button
-                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      className="w-11 h-11 flex items-center justify-center hover:bg-zinc-50 transition-colors"
-                    >
-                      <Minus className="w-4 h-4" />
+                  <label style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '11px', letterSpacing: '0.2em', textTransform: 'uppercase', display: 'block', marginBottom: '12px' }}>Quantity</label>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', border: '1px solid #e4e4e7' }}>
+                    <button onClick={() => setQuantity(Math.max(1, quantity - 1))} style={{ width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer' }}>
+                      <Minus style={{ width: '16px', height: '16px' }} />
                     </button>
-                    <span className="w-12 text-center mono-font text-sm">{quantity}</span>
-                    <button
-                      onClick={() => setQuantity(quantity + 1)}
-                      className="w-11 h-11 flex items-center justify-center hover:bg-zinc-50 transition-colors"
-                    >
-                      <Plus className="w-4 h-4" />
+                    <span style={{ width: '48px', textAlign: 'center', fontFamily: "'JetBrains Mono', monospace", fontSize: '14px' }}>{quantity}</span>
+                    <button onClick={() => setQuantity(quantity + 1)} style={{ width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer' }}>
+                      <Plus style={{ width: '16px', height: '16px' }} />
                     </button>
                   </div>
                 </div>
 
                 {/* Add to Cart */}
-                <Button
-                  onClick={handleAddToCart}
-                  disabled={product.stock === 0}
-                  className="w-full h-14 rounded-none bg-black text-white hover:bg-zinc-800 mono-font text-sm tracking-wider uppercase"
-                  data-testid="add-to-cart-btn"
-                >
+                <button onClick={handleAddToCart} disabled={product.stock === 0} data-testid="add-to-cart-btn" style={{
+                  width: '100%', height: '56px', background: '#000', color: '#fff', border: 'none', cursor: product.stock > 0 ? 'pointer' : 'not-allowed',
+                  fontFamily: "'JetBrains Mono', monospace", fontSize: '13px', fontWeight: 600, letterSpacing: '0.15em', textTransform: 'uppercase',
+                  opacity: product.stock === 0 ? 0.5 : 1, transition: 'opacity 0.2s'
+                }}>
                   {product.stock > 0 ? 'Add to Cart' : 'Out of Stock'}
-                </Button>
+                </button>
 
-                {/* Stock */}
                 {product.stock > 0 && (
-                  <p className="mono-font text-xs text-zinc-400 text-center">
+                  <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '11px', color: '#a1a1aa', textAlign: 'center' }}>
                     {product.stock} items in stock
                   </p>
                 )}
@@ -312,79 +254,76 @@ const ProductDetailPage = () => {
             </motion.div>
           </div>
 
-          {/* Reviews */}
-          <div className="mt-24 pt-12 border-t border-zinc-200">
-            <h2 className="heading-font text-2xl font-bold mb-8">
+          {/* Reviews Section */}
+          <div style={{ marginTop: '96px', paddingTop: '48px', borderTop: '1px solid #e4e4e7' }}>
+            <h2 style={{ fontFamily: "'Bodoni Moda', serif", fontSize: '24px', fontWeight: 700, marginBottom: '32px' }}>
               Reviews {reviews.length > 0 && `(${reviews.length})`}
             </h2>
-            
+
             {/* Review Form */}
             {user && (
-              <form onSubmit={handleReviewSubmit} className="mb-12 p-6 bg-zinc-50" data-testid="review-form">
-                <h3 className="mono-font text-sm tracking-wider uppercase mb-6">Write a Review</h3>
-                <div className="space-y-4">
+              <form onSubmit={handleReviewSubmit} data-testid="review-form" style={{ marginBottom: '48px', padding: '24px', background: '#fafafa' }}>
+                <h3 style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '12px', letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: '24px' }}>Write a Review</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                   <div>
-                    <label className="mono-font text-xs text-zinc-500 mb-2 block">Rating</label>
-                    <Select
-                      value={reviewForm.rating.toString()}
-                      onValueChange={(val) => setReviewForm({ ...reviewForm, rating: parseInt(val) })}
-                    >
-                      <SelectTrigger className="w-40 rounded-none" data-testid="review-rating-select">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {[5, 4, 3, 2, 1].map(num => (
-                          <SelectItem key={num} value={num.toString()}>
-                            {num} Star{num > 1 ? 's' : ''}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <label style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '11px', color: '#71717a', display: 'block', marginBottom: '8px' }}>Rating</label>
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                      {[1, 2, 3, 4, 5].map(num => (
+                        <button key={num} type="button" onClick={() => setReviewForm({ ...reviewForm, rating: num })} style={{
+                          background: 'none', border: 'none', cursor: 'pointer', padding: '4px'
+                        }}>
+                          <Star style={{ width: '20px', height: '20px', fill: num <= reviewForm.rating ? '#000' : '#e4e4e7', stroke: num <= reviewForm.rating ? '#000' : '#e4e4e7' }} />
+                        </button>
+                      ))}
+                    </div>
                   </div>
                   <div>
-                    <label className="mono-font text-xs text-zinc-500 mb-2 block">Comment</label>
+                    <label style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '11px', color: '#71717a', display: 'block', marginBottom: '8px' }}>Comment</label>
                     <textarea
-                      className="w-full min-h-[100px] p-4 border border-zinc-200 rounded-none focus:outline-none focus:border-black transition-colors body-font text-sm"
                       value={reviewForm.comment}
                       onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
                       placeholder="Share your thoughts..."
                       required
                       data-testid="review-comment-input"
+                      style={{
+                        width: '100%', minHeight: '100px', padding: '16px', border: '1px solid #e4e4e7', borderRadius: 0,
+                        fontFamily: "'Manrope', sans-serif", fontSize: '14px', outline: 'none', resize: 'vertical', boxSizing: 'border-box'
+                      }}
                     />
                   </div>
-                  <Button type="submit" className="rounded-none bg-black text-white hover:bg-zinc-800 mono-font text-xs tracking-wider uppercase" data-testid="review-submit-btn">
+                  <button type="submit" data-testid="review-submit-btn" style={{
+                    alignSelf: 'flex-start', padding: '12px 24px', background: '#000', color: '#fff', border: 'none', cursor: 'pointer',
+                    fontFamily: "'JetBrains Mono', monospace", fontSize: '11px', letterSpacing: '0.15em', textTransform: 'uppercase'
+                  }}>
                     Submit Review
-                  </Button>
+                  </button>
                 </div>
               </form>
             )}
 
             {/* Reviews List */}
-            <div className="space-y-6">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
               {reviews.length > 0 ? (
                 reviews.map(review => (
-                  <div key={review.id} className="pb-6 border-b border-zinc-100 last:border-0" data-testid={`review-${review.id}`}>
-                    <div className="flex items-start justify-between mb-2">
+                  <div key={review.id} data-testid={`review-${review.id}`} style={{ paddingBottom: '24px', borderBottom: '1px solid #f4f4f5' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '8px' }}>
                       <div>
-                        <p className="body-font font-medium text-sm">{review.user_name}</p>
-                        <div className="flex items-center gap-1 mt-1">
+                        <p style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 500, fontSize: '14px', marginBottom: '4px' }}>{review.user_name}</p>
+                        <div style={{ display: 'flex', gap: '2px' }}>
                           {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`w-3 h-3 ${i < review.rating ? 'fill-black text-black' : 'fill-zinc-200 text-zinc-200'}`}
-                            />
+                            <Star key={i} style={{ width: '12px', height: '12px', fill: i < review.rating ? '#000' : '#e4e4e7', stroke: i < review.rating ? '#000' : '#e4e4e7' }} />
                           ))}
                         </div>
                       </div>
-                      <span className="mono-font text-[10px] text-zinc-400">
+                      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: '#a1a1aa' }}>
                         {new Date(review.created_at).toLocaleDateString()}
                       </span>
                     </div>
-                    <p className="body-font text-sm text-zinc-600 leading-relaxed mt-3">{review.comment}</p>
+                    <p style={{ fontFamily: "'Manrope', sans-serif", fontSize: '14px', color: '#52525b', lineHeight: 1.7, marginTop: '12px' }}>{review.comment}</p>
                   </div>
                 ))
               ) : (
-                <p className="mono-font text-sm text-zinc-400 text-center py-12">No reviews yet</p>
+                <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '14px', color: '#a1a1aa', textAlign: 'center', padding: '48px 0' }}>No reviews yet</p>
               )}
             </div>
           </div>

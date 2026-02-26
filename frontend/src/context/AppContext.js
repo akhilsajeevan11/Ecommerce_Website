@@ -4,6 +4,7 @@ import axios from 'axios';
 const AuthContext = createContext();
 const CartContext = createContext();
 const WishlistContext = createContext();
+const AuthModalContext = createContext();
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -11,6 +12,7 @@ const API = `${BACKEND_URL}/api`;
 export const useAuth = () => useContext(AuthContext);
 export const useCart = () => useContext(CartContext);
 export const useWishlist = () => useContext(WishlistContext);
+export const useAuthModal = () => useContext(AuthModalContext);
 
 export const AppProviders = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -18,6 +20,14 @@ export const AppProviders = ({ children }) => {
   const [cart, setCart] = useState({ items: [] });
   const [wishlist, setWishlist] = useState({ items: [] });
   const [loading, setLoading] = useState(true);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState('login');
+
+  const openAuthModal = (mode = 'login') => {
+    setAuthModalMode(mode);
+    setShowAuthModal(true);
+  };
+  const closeAuthModal = () => setShowAuthModal(false);
 
   useEffect(() => {
     if (token) {
@@ -159,7 +169,9 @@ export const AppProviders = ({ children }) => {
     <AuthContext.Provider value={{ user, token, login, register, logout, loading }}>
       <CartContext.Provider value={{ cart, addToCart, removeFromCart, updateCart, clearCart }}>
         <WishlistContext.Provider value={{ wishlist, addToWishlist, removeFromWishlist }}>
-          {children}
+          <AuthModalContext.Provider value={{ showAuthModal, authModalMode, openAuthModal, closeAuthModal, setAuthModalMode }}>
+            {children}
+          </AuthModalContext.Provider>
         </WishlistContext.Provider>
       </CartContext.Provider>
     </AuthContext.Provider>

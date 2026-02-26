@@ -1,12 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Heart } from 'lucide-react';
-import { useAuth, useWishlist } from '../context/AppContext';
+import { useAuth, useWishlist, useAuthModal } from '../context/AppContext';
 import { toast } from 'sonner';
 
 const ProductCard = ({ product }) => {
   const { user } = useAuth();
   const { wishlist, addToWishlist, removeFromWishlist } = useWishlist();
+  const { openAuthModal } = useAuthModal();
 
   const isInWishlist = wishlist?.items?.includes(product.id);
 
@@ -14,7 +15,7 @@ const ProductCard = ({ product }) => {
     e.preventDefault();
     e.stopPropagation();
     if (!user) {
-      toast.error('Please login to add to wishlist');
+      openAuthModal('login');
       return;
     }
     if (isInWishlist) {

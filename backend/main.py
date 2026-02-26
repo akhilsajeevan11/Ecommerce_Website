@@ -18,10 +18,10 @@ load_dotenv()
 app = FastAPI()
 
 # Create uploads directory if it doesn't exist
-if not os.path.exists("backend/uploads"):
-    os.makedirs("backend/uploads")
+if not os.path.exists("uploads"):
+    os.makedirs("uploads")
 
-app.mount("/uploads", StaticFiles(directory="backend/uploads"), name="uploads")
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 app.add_middleware(
     CORSMiddleware,

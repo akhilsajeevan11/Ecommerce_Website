@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { ShoppingCart, Heart, User, Menu, X, LogOut, Package } from 'lucide-react';
-import { useAuth, useCart } from '../context/AppContext';
+import { useAuth, useCart, useAuthModal } from '../context/AppContext';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from './ui/sheet';
 import { Button } from './ui/button';
 import AuthModal from './AuthModal';
@@ -10,8 +10,7 @@ import CartDrawer from './CartDrawer';
 const Navigation = () => {
   const { user, logout } = useAuth();
   const { cart } = useCart();
-  const [showAuth, setShowAuth] = useState(false);
-  const [authMode, setAuthMode] = useState('login');
+  const { showAuthModal, authModalMode, openAuthModal, closeAuthModal, setAuthModalMode } = useAuthModal();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -24,8 +23,7 @@ const Navigation = () => {
   ];
 
   const handleAuth = (mode) => {
-    setAuthMode(mode);
-    setShowAuth(true);
+    openAuthModal(mode);
   };
 
   const handleLogout = () => {
@@ -279,7 +277,7 @@ const Navigation = () => {
         )}
       </nav>
 
-      <AuthModal open={showAuth} onClose={() => setShowAuth(false)} mode={authMode} onModeChange={setAuthMode} />
+      <AuthModal open={showAuthModal} onClose={closeAuthModal} mode={authModalMode} onModeChange={setAuthModalMode} />
     </>
   );
 };

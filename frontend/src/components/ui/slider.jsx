@@ -1,25 +1,56 @@
 import * as React from "react"
 import * as SliderPrimitive from "@radix-ui/react-slider"
-import { cn } from "../../lib/utils"
 
-const Slider = React.forwardRef(({ className, defaultValue, value, ...props }, ref) => {
+const Slider = React.forwardRef(({ className, defaultValue, value, style, ...props }, ref) => {
   const values = value || defaultValue || [0]
-  
+
   return (
     <SliderPrimitive.Root
       ref={ref}
-      className={cn("relative flex w-full touch-none select-none items-center", className)}
+      style={{
+        position: 'relative',
+        display: 'flex',
+        width: '100%',
+        touchAction: 'none',
+        userSelect: 'none',
+        alignItems: 'center',
+        ...style
+      }}
       value={value}
       defaultValue={defaultValue}
       {...props}
     >
-      <SliderPrimitive.Track className="relative h-[1px] w-full grow bg-neutral-200">
-        <SliderPrimitive.Range className="absolute h-full bg-black" />
+      <SliderPrimitive.Track
+        style={{
+          position: 'relative',
+          height: '2px',
+          width: '100%',
+          flexGrow: 1,
+          background: '#e5e5e5',
+          borderRadius: 0
+        }}
+      >
+        <SliderPrimitive.Range
+          style={{
+            position: 'absolute',
+            height: '100%',
+            background: '#000'
+          }}
+        />
       </SliderPrimitive.Track>
       {values.map((_, i) => (
         <SliderPrimitive.Thumb
           key={i}
-          className="block h-3 w-3 bg-black rounded-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 cursor-pointer"
+          style={{
+            display: 'block',
+            height: '14px',
+            width: '14px',
+            background: '#000',
+            borderRadius: '50%',
+            cursor: 'pointer',
+            border: 'none',
+            outline: 'none'
+          }}
         />
       ))}
     </SliderPrimitive.Root>
