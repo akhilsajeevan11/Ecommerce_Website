@@ -172,14 +172,14 @@ const ProductListPage = () => {
                 </aside>
               )}
 
-              {/* Products Grid */}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                {filteredProducts.length > 0 ? (
-                  <div style={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)',
-                    gap: isMobile ? '16px' : '32px'
-                  }}>
+                {/* Products Grid */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  {filteredProducts.length > 0 ? (
+                    <div style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(280px, 1fr))',
+                      gap: isMobile ? '16px' : '32px'
+                    }}>
                     {filteredProducts.map((product, index) => (
                       <motion.div
                         key={product.id}
@@ -222,32 +222,33 @@ const ProductListPage = () => {
           }}>
             Category
           </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {categories.map(category => (
-              <div key={category} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <Checkbox
-                  id={`cat-${category}`}
-                  checked={selectedCategories.includes(category)}
-                  onCheckedChange={() => toggleCategory(category)}
-                  style={{ borderRadius: 0, width: '16px', height: '16px', border: '1px solid #000' }}
-                  data-testid={`filter-category-${category}`}
-                />
-                <Label 
-                  htmlFor={`cat-${category}`} 
-                  style={{ 
-                    fontFamily: "'Manrope', sans-serif", 
-                    fontSize: '13px', 
-                    cursor: 'pointer',
-                    fontWeight: 400,
-                    color: '#000',
-                    lineHeight: 1
-                  }}
-                >
-                  {category}
-                </Label>
-              </div>
-            ))}
-          </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {categories.map(category => (
+                <div key={category} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '4px 0' }}>
+                  <Checkbox
+                    id={`cat-${category}`}
+                    checked={selectedCategories.includes(category)}
+                    onCheckedChange={() => toggleCategory(category)}
+                    style={{ borderRadius: 0 }}
+                    data-testid={`filter-category-${category}`}
+                  />
+                  <Label 
+                    htmlFor={`cat-${category}`} 
+                    style={{ 
+                      fontFamily: "'Manrope', sans-serif", 
+                      fontSize: '14px', 
+                      cursor: 'pointer',
+                      fontWeight: 400,
+                      color: '#000',
+                      lineHeight: 1,
+                      userSelect: 'none'
+                    }}
+                  >
+                    {category}
+                  </Label>
+                </div>
+              ))}
+            </div>
         </div>
   
         {/* Price Range Filter */}
@@ -272,17 +273,18 @@ const ProductListPage = () => {
             style={{ marginBottom: '16px' }}
             data-testid="price-slider"
           />
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            fontFamily: "'JetBrains Mono', monospace",
-            fontSize: '11px', 
-            color: '#71717a',
-            letterSpacing: '0.05em'
-          }}>
-            <span>₹{priceRange[0]}</span>
-            <span>₹{priceRange[1]}</span>
-          </div>
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              fontFamily: "'JetBrains Mono', monospace",
+              fontSize: '11px', 
+              color: '#000',
+              letterSpacing: '0.05em',
+              marginTop: '8px'
+            }}>
+              <span>₹{priceRange[0].toLocaleString()}</span>
+              <span>₹{priceRange[1].toLocaleString()}</span>
+            </div>
         </div>
       </div>
     );
