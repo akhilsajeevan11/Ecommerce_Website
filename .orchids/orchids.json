@@ -1,9 +1,0 @@
-{
-  "projectId": "6ed0a839-9570-426b-b752-3808760fa97b",
-  "createdAt": 1769773937281,
-  "startupCommands": [
-    "mkdir -p mongodb_data && mongod --dbpath mongodb_data --port 27018",
-    "jagu-env/bin/python backend/main.py",
-    "cd frontend && PORT=3001 npm start"
-  ]
-}
