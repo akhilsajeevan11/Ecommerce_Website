@@ -2,13 +2,20 @@ import asyncio
 from motor.motor_asyncio import AsyncIOMotorClient
 from datetime import datetime, timezone
 import uuid
+import os
+from dotenv import load_dotenv
 
-MONGO_URL = "mongodb://localhost:27018"
-DB_NAME = "noir_db"
+load_dotenv()
+
+MONGO_URL = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
+DB_NAME = os.getenv("DATABASE_NAME", "noir_db")
 
 async def seed_products():
     client = AsyncIOMotorClient(MONGO_URL)
     db = client[DB_NAME]
+    
+    # Use local server URL for images
+    BASE_URL = "http://localhost:8000"
     
     products = [
         {
@@ -20,7 +27,7 @@ async def seed_products():
             "sizes": ["XS", "S", "M", "L", "XL", "XXL"],
             "colors": ["Black"],
             "images": [
-                "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=800&q=80"
+                f"{BASE_URL}/uploads/classic_black_tee.jpg"
             ],
             "model_3d_url": None,
             "images_360": [],
@@ -38,7 +45,7 @@ async def seed_products():
             "sizes": ["XS", "S", "M", "L", "XL", "XXL"],
             "colors": ["Black", "Gray"],
             "images": [
-                "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=800&q=80"
+                f"{BASE_URL}/uploads/minimalist_hoodie.jpg"
             ],
             "model_3d_url": None,
             "images_360": [],
@@ -56,7 +63,7 @@ async def seed_products():
             "sizes": ["XS", "S", "M", "L", "XL", "XXL"],
             "colors": ["Black", "Gray"],
             "images": [
-                "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&q=80"
+                f"{BASE_URL}/uploads/structured_blazer.jpg"
             ],
             "model_3d_url": None,
             "images_360": [],
@@ -74,7 +81,7 @@ async def seed_products():
             "sizes": ["XS", "S", "M", "L", "XL", "XXL"],
             "colors": ["Black", "Gray"],
             "images": [
-                "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=800&q=80"
+                f"{BASE_URL}/uploads/wide_leg_trousers.jpg"
             ],
             "model_3d_url": None,
             "images_360": [],
@@ -92,7 +99,7 @@ async def seed_products():
             "sizes": ["XS", "S", "M", "L", "XL", "XXL"],
             "colors": ["Black", "White"],
             "images": [
-                "https://images.unsplash.com/photo-1598554747436-c9293d6a588f?w=800&q=80"
+                f"{BASE_URL}/uploads/oversized_shirt.jpg"
             ],
             "model_3d_url": None,
             "images_360": [],
@@ -110,7 +117,7 @@ async def seed_products():
             "sizes": ["XS", "S", "M", "L", "XL", "XXL"],
             "colors": ["Black", "Gray"],
             "images": [
-                "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=800&q=80"
+                f"{BASE_URL}/uploads/knit_sweater.jpg"
             ],
             "model_3d_url": None,
             "images_360": [],
@@ -126,7 +133,7 @@ async def seed_products():
     
     # Insert new products
     result = await db.products.insert_many(products)
-    print(f"✅ Seeded {len(result.inserted_ids)} products!")
+    print(f"✅ Seeded {len(result.inserted_ids)} products with local images!")
     
     client.close()
 

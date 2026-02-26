@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException, Depends, status, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.staticfiles import StaticFiles
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, EmailStr
 from typing import List, Optional
@@ -15,6 +16,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = FastAPI()
+
+# Create uploads directory if it doesn't exist
+if not os.path.exists("backend/uploads"):
+    os.makedirs("backend/uploads")
+
+app.mount("/uploads", StaticFiles(directory="backend/uploads"), name="uploads")
 
 app.add_middleware(
     CORSMiddleware,
