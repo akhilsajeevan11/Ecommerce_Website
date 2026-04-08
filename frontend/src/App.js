@@ -1,5 +1,5 @@
 import React, { Suspense, lazy } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProviders } from './context/AppContext';
 import { Toaster } from 'sonner';
 import Navigation from './components/Navigation';
@@ -12,7 +12,14 @@ const CartPage = lazy(() => import('./pages/CartPage'));
 const CheckoutPage = lazy(() => import('./pages/CheckoutPage'));
 const OrdersPage = lazy(() => import('./pages/OrdersPage'));
 const WishlistPage = lazy(() => import('./pages/WishlistPage'));
-const AdminPage = lazy(() => import('./pages/AdminPage'));
+const AdminLayout = lazy(() => import('./pages/AdminPage'));
+const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'));
+const AdminProductsPage = lazy(() => import('./pages/AdminProductsPage'));
+const AdminAddProductPage = lazy(() => import('./pages/AdminAddProductPage'));
+const AdminProductStockPage = lazy(() => import('./pages/AdminProductStockPage'));
+const AdminDeadStockPage = lazy(() => import('./pages/AdminDeadStockPage'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+const SocialAuthCallback = lazy(() => import('./pages/SocialAuthCallback'));
 
 const LoadingScreen = () => (
   <div className="min-h-screen flex items-center justify-center bg-white">
@@ -39,7 +46,16 @@ function App() {
               <Route path="/checkout" element={<CheckoutPage />} />
               <Route path="/orders" element={<OrdersPage />} />
               <Route path="/wishlist" element={<WishlistPage />} />
-              <Route path="/admin" element={<AdminPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/social-auth-callback" element={<SocialAuthCallback />} />
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<Navigate to="dashboard" replace />} />
+                <Route path="dashboard" element={<AdminDashboardPage />} />
+                <Route path="products" element={<AdminProductsPage />} />
+                <Route path="products/add" element={<AdminAddProductPage />} />
+                <Route path="stock" element={<AdminProductStockPage />} />
+                <Route path="dead-stock" element={<AdminDeadStockPage />} />
+              </Route>
             </Routes>
           </Suspense>
           <Toaster position="top-right" richColors />
