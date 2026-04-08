@@ -22,6 +22,7 @@ export const AppProviders = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authModalMode, setAuthModalMode] = useState('login');
+  const [showCompleteProfile, setShowCompleteProfile] = useState(false);
 
   const openAuthModal = (mode = 'login') => {
     setAuthModalMode(mode);
@@ -45,11 +46,27 @@ export const AppProviders = ({ children }) => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setUser(response.data);
+      // Check if profile is incomplete (social login users)
+      if (!response.data.phone) {
+        setTimeout(() => setShowCompleteProfile(true), 1500);
+      }
     } catch (error) {
       console.error('Load user error:', error);
       logout();
     } finally {
       setLoading(false);
+    }
+  };
+
+  const refreshUser = async () => {
+    if (!token) return;
+    try {
+      const response = await axios.get(`${API}/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setUser(response.data);
+    } catch (error) {
+      console.error('Refresh user error:', error);
     }
   };
 
@@ -75,19 +92,26 @@ export const AppProviders = ({ children }) => {
     }
   };
 
-  const login = async (email, password) => {
-    const response = await axios.post(`${API}/auth/login`, { email, password });
-    setToken(response.data.token);
-    setUser(response.data.user);
-    localStorage.setItem('token', response.data.token);
+  const login = async (identifier, password) => {
+    const response = await axios.post(`${API}/auth/login`, { identifier, password });
+    const { access_token, user: userData } = response.data;
+    console.log('[AppContext] Login successful:', { userId: userData.id, tokenType: response.data.token_type });
+    setToken(access_token);
+    setUser(userData);
+    localStorage.setItem('token', access_token);
     return response.data;
   };
 
-  const register = async (email, password, name) => {
-    const response = await axios.post(`${API}/auth/register`, { email, password, name });
-    setToken(response.data.token);
-    setUser(response.data.user);
-    localStorage.setItem('token', response.data.token);
+  const sendOtp = async (email, password, name, phone, dob) => {
+    const response = await axios.post(`${API}/auth/send-otp`, { email, password, name, phone: phone || null, dob: dob || null });
+    console.log('[AppContext] OTP sent to:', email);
+    return response.data;
+  };
+
+  const verifyOtpAndRegister = async (email, otp) => {
+    const response = await axios.post(`${API}/auth/verify-otp-register`, { email, otp });
+    console.log('[AppContext] OTP verified, user registered:', { userId: response.data.user.id, email: response.data.user.email });
+    // Don't auto-login — user will be redirected to login form
     return response.data;
   };
 
@@ -97,6 +121,13 @@ export const AppProviders = ({ children }) => {
     setCart({ items: [] });
     setWishlist({ items: [] });
     localStorage.removeItem('token');
+  };
+
+  const socialLogin = (accessToken) => {
+    console.log('[AppContext] Social login with token');
+    setToken(accessToken);
+    localStorage.setItem('token', accessToken);
+    // loadUser will be triggered by the token useEffect
   };
 
   const updateCart = async (items) => {
@@ -166,7 +197,7 @@ export const AppProviders = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ user, token, login, sendOtp, verifyOtpAndRegister, socialLogin, logout, loading, refreshUser, showCompleteProfile, setShowCompleteProfile }}>
       <CartContext.Provider value={{ cart, addToCart, removeFromCart, updateCart, clearCart }}>
         <WishlistContext.Provider value={{ wishlist, addToWishlist, removeFromWishlist }}>
           <AuthModalContext.Provider value={{ showAuthModal, authModalMode, openAuthModal, closeAuthModal, setAuthModalMode }}>

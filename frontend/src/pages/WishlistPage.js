@@ -61,25 +61,28 @@ const WishlistPage = () => {
 
   if (loading) {
     return (
-      <div className="page-transition min-h-screen flex items-center justify-center">
-        <p className="mono-font text-zinc-500">Loading wishlist...</p>
+      <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ fontFamily: "'JetBrains Mono', monospace", color: '#71717a' }}>Loading wishlist...</p>
       </div>
     );
   }
 
   if (products.length === 0) {
     return (
-      <div className="page-transition min-h-screen px-6 md:px-12 lg:px-24 py-12">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="heading-font text-4xl md:text-6xl font-bold tracking-tight mb-12">Wishlist</h1>
-          <div className="text-center py-24 border border-zinc-200">
-            <Heart className="w-16 h-16 mx-auto mb-6 text-zinc-300" />
-            <h2 className="heading-font text-2xl font-bold mb-2">Your wishlist is empty</h2>
-            <p className="mono-font text-sm text-zinc-500 mb-8">Save items you love for later.</p>
+      <div style={{ minHeight: '70vh', padding: '48px 24px' }}>
+        <div style={{ maxWidth: '640px', margin: '0 auto' }}>
+          <h1 className="heading-font" style={{ fontSize: '2.5rem', fontWeight: 700, letterSpacing: '-0.025em', marginBottom: '48px', textAlign: 'center' }}>
+            Wishlist
+          </h1>
+          <div style={{ textAlign: 'center', padding: '64px 24px', border: '1px solid #e4e4e7' }}>
+            <Heart style={{ width: '48px', height: '48px', color: '#d4d4d8', margin: '0 auto 24px' }} />
+            <h2 className="heading-font" style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '8px' }}>Your wishlist is empty</h2>
+            <p style={{ fontFamily: "'Manrope', sans-serif", fontSize: '14px', color: '#71717a', marginBottom: '32px' }}>Save items you love for later.</p>
             <Link to="/shop">
-              <Button className="rounded-none bg-black text-white hover:bg-zinc-800 btn-noir">
-                <ShoppingBag className="w-4 h-4 mr-2" />Browse Products
-              </Button>
+              <button style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '12px 24px', backgroundColor: '#000', color: '#fff', border: 'none', cursor: 'pointer', fontFamily: "'Manrope', sans-serif", fontSize: '13px', fontWeight: 500 }}>
+                <ShoppingBag style={{ width: '16px', height: '16px' }} />
+                Browse Products
+              </button>
             </Link>
           </div>
         </div>
@@ -88,40 +91,40 @@ const WishlistPage = () => {
   }
 
   return (
-    <div className="page-transition min-h-screen px-6 md:px-12 lg:px-24 py-12">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-12">
-          <h1 className="heading-font text-4xl md:text-6xl font-bold tracking-tight">Wishlist</h1>
-          <p className="mono-font text-sm text-zinc-500">{products.length} items</p>
+    <div style={{ minHeight: '80vh', padding: '48px 24px' }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '40px' }}>
+          <h1 className="heading-font" style={{ fontSize: '2.5rem', fontWeight: 700, letterSpacing: '-0.025em' }}>Wishlist</h1>
+          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '13px', color: '#71717a' }}>{products.length} items</p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '24px' }}>
           {products.map((product, idx) => (
             <motion.div key={product.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: idx * 0.05 }} className="group">
-              <div className="relative overflow-hidden border border-zinc-200">
+              transition={{ duration: 0.4, delay: idx * 0.05 }}>
+              <div style={{ position: 'relative', border: '1px solid #e4e4e7', overflow: 'hidden' }}>
                 <Link to={`/product/${product.id}`}>
                   <img src={product.images?.[0] || 'https://via.placeholder.com/400x500'} alt={product.name}
-                    className="w-full aspect-[3/4] object-cover grayscale-image" />
+                    style={{ width: '100%', aspectRatio: '3/4', objectFit: 'cover', display: 'block', filter: 'grayscale(30%)' }} />
                 </Link>
                 <button onClick={() => handleRemove(product.id)}
-                  className="absolute top-4 right-4 bg-white/90 p-2 rounded-none hover:bg-white">
-                  <X className="w-4 h-4" />
+                  style={{ position: 'absolute', top: '12px', right: '12px', background: 'rgba(255,255,255,0.9)', border: 'none', cursor: 'pointer', padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <X style={{ width: '16px', height: '16px' }} />
                 </button>
-                <div className="absolute bottom-0 left-0 right-0 p-4 bg-white/95 translate-y-full group-hover:translate-y-0 transition-transform">
-                  <Button onClick={() => handleAddToCart(product)}
-                    className="w-full rounded-none bg-black text-white hover:bg-zinc-800 btn-noir text-sm">
-                    <ShoppingCart className="w-4 h-4 mr-2" />Add to Cart
-                  </Button>
+                <div style={{ padding: '12px', borderTop: '1px solid #f4f4f5' }}>
+                  <button onClick={() => handleAddToCart(product)}
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px', backgroundColor: '#000', color: '#fff', border: 'none', cursor: 'pointer', fontFamily: "'Manrope', sans-serif", fontSize: '12px', fontWeight: 500 }}>
+                    <ShoppingCart style={{ width: '14px', height: '14px' }} />Add to Cart
+                  </button>
                 </div>
               </div>
-              <div className="mt-4">
-                <Link to={`/product/${product.id}`}>
-                  <h3 className="heading-font text-lg font-medium tracking-tight hover:opacity-70">{product.name}</h3>
+              <div style={{ marginTop: '12px' }}>
+                <Link to={`/product/${product.id}`} style={{ textDecoration: 'none', color: '#000' }}>
+                  <h3 className="heading-font" style={{ fontSize: '1rem', fontWeight: 500, letterSpacing: '-0.01em', margin: '0 0 4px 0' }}>{product.name}</h3>
                 </Link>
-                <p className="mono-font text-sm text-zinc-500">{product.category}</p>
-                <div className="flex items-center justify-between mt-2">
-                  <span className="mono-font text-lg font-bold">₹{product.price?.toFixed(2)}</span>
-                  <span className={`mono-font text-xs ${product.stock > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '12px', color: '#71717a', margin: '0 0 8px 0' }}>{product.category}</p>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '1rem', fontWeight: 700 }}>₹{product.price?.toFixed(2)}</span>
+                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '11px', color: product.stock > 0 ? '#16a34a' : '#dc2626' }}>
                     {product.stock > 0 ? 'In Stock' : 'Out of Stock'}
                   </span>
                 </div>
