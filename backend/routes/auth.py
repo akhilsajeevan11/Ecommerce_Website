@@ -174,7 +174,8 @@ from services.social_auth_service import (
     get_google_user_info, get_microsoft_user_info, find_or_create_social_user,
 )
 
-BACKEND_URL = "http://localhost:8000"
+# BACKEND_URL = "http://localhost:8000"
+BACKEND_URL = "http://13.127.148.96"
 
 
 @router.get("/google")

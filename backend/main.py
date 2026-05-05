@@ -26,6 +26,9 @@ app.add_middleware(
         "http://localhost:3000",
         "http://localhost:3001",
         "https://ecommerce-website-six-hazel.vercel.app/",
+        "https://d2ytz7pa25s5ff.cloudfront.net",
+        "https://aksou.in",
+        "https://www.aksou.in"
     ],
     allow_credentials=True,
     allow_methods=["*"],
