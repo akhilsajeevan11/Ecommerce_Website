@@ -19,7 +19,7 @@ DROP TABLE IF EXISTS categories CASCADE;
 -- CATEGORIES
 -- ============================================================
 CREATE TABLE categories (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id VARCHAR(255) PRIMARY KEY,
     name VARCHAR(100) NOT NULL UNIQUE,
     slug VARCHAR(100) NOT NULL UNIQUE,
     description TEXT,
@@ -31,11 +31,11 @@ CREATE TABLE categories (
 -- PRODUCTS
 -- ============================================================
 CREATE TABLE products (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id VARCHAR(255) PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     description TEXT,
     price DECIMAL(10, 2) NOT NULL CHECK (price >= 0),
-    category_id UUID NOT NULL REFERENCES categories(id) ON DELETE RESTRICT,
+    category_id VARCHAR(255) NOT NULL REFERENCES categories(id) ON DELETE RESTRICT,
     stock INTEGER NOT NULL DEFAULT 0 CHECK (stock >= 0),
     barcode_id VARCHAR(100),
     story TEXT,
@@ -57,8 +57,8 @@ CREATE INDEX idx_products_created_at ON products(created_at DESC);
 -- MEDIA (product images/videos stored in S3)
 -- ============================================================
 CREATE TABLE media (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+    id VARCHAR(255) PRIMARY KEY,
+    product_id VARCHAR(255) NOT NULL REFERENCES products(id) ON DELETE CASCADE,
     url TEXT NOT NULL,
     media_type VARCHAR(20) NOT NULL DEFAULT 'image' CHECK (media_type IN ('image', 'video', '360')),
     sort_order INTEGER NOT NULL DEFAULT 0,
@@ -76,8 +76,8 @@ CREATE INDEX idx_media_primary ON media(product_id, is_primary) WHERE is_primary
 -- PRODUCT SIZES
 -- ============================================================
 CREATE TABLE product_sizes (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+    id VARCHAR(255) PRIMARY KEY,
+    product_id VARCHAR(255) NOT NULL REFERENCES products(id) ON DELETE CASCADE,
     size_label VARCHAR(20) NOT NULL,
     UNIQUE(product_id, size_label)
 );
@@ -88,8 +88,8 @@ CREATE INDEX idx_product_sizes_product ON product_sizes(product_id);
 -- PRODUCT COLORS
 -- ============================================================
 CREATE TABLE product_colors (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+    id VARCHAR(255) PRIMARY KEY,
+    product_id VARCHAR(255) NOT NULL REFERENCES products(id) ON DELETE CASCADE,
     color_name VARCHAR(50) NOT NULL,
     color_hex VARCHAR(7),
     UNIQUE(product_id, color_name)
@@ -101,8 +101,8 @@ CREATE INDEX idx_product_colors_product ON product_colors(product_id);
 -- REVIEWS
 -- ============================================================
 CREATE TABLE reviews (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+    id VARCHAR(255) PRIMARY KEY,
+    product_id VARCHAR(255) NOT NULL REFERENCES products(id) ON DELETE CASCADE,
     user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
     comment TEXT,
@@ -119,7 +119,7 @@ CREATE INDEX idx_reviews_user ON reviews(user_id);
 CREATE TYPE order_status AS ENUM ('pending', 'confirmed', 'shipped', 'delivered', 'cancelled');
 
 CREATE TABLE orders (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id VARCHAR(255) PRIMARY KEY,
     user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
     total DECIMAL(10, 2) NOT NULL CHECK (total >= 0),
     status order_status NOT NULL DEFAULT 'pending',
@@ -144,9 +144,9 @@ CREATE INDEX idx_orders_created_at ON orders(created_at DESC);
 -- ORDER ITEMS
 -- ============================================================
 CREATE TABLE order_items (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
-    product_id UUID NOT NULL REFERENCES products(id) ON DELETE RESTRICT,
+    id VARCHAR(255) PRIMARY KEY,
+    order_id VARCHAR(255) NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+    product_id VARCHAR(255) NOT NULL REFERENCES products(id) ON DELETE RESTRICT,
     quantity INTEGER NOT NULL CHECK (quantity > 0),
     size VARCHAR(20),
     color VARCHAR(50),
@@ -161,9 +161,9 @@ CREATE INDEX idx_order_items_product ON order_items(product_id);
 -- CART ITEMS
 -- ============================================================
 CREATE TABLE cart_items (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id VARCHAR(255) PRIMARY KEY,
     user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+    product_id VARCHAR(255) NOT NULL REFERENCES products(id) ON DELETE CASCADE,
     quantity INTEGER NOT NULL DEFAULT 1 CHECK (quantity > 0),
     size VARCHAR(20),
     color VARCHAR(50),
@@ -177,9 +177,9 @@ CREATE INDEX idx_cart_items_user ON cart_items(user_id);
 -- WISHLIST
 -- ============================================================
 CREATE TABLE wishlist (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id VARCHAR(255) PRIMARY KEY,
     user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+    product_id VARCHAR(255) NOT NULL REFERENCES products(id) ON DELETE CASCADE,
     added_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     UNIQUE(user_id, product_id)
 );

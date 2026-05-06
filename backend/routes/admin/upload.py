@@ -40,6 +40,7 @@ if USE_S3:
 async def upload_file(
     file: UploadFile = File(...),
     product_id: Optional[str] = Form(None),
+    category: Optional[str] = Form(None),
     current_user=Depends(get_current_user),
 ):
     if not current_user.get("is_admin"):
@@ -63,8 +64,12 @@ async def upload_file(
     unique_filename = f"{uuid.uuid4()}{ext}"
 
     if USE_S3:
-        # Upload to S3
-        s3_key = f"uploads/{unique_filename}"
+        # Upload to S3 under category folder if provided, otherwise uploads/
+        if category:
+            folder = category.strip().replace(" ", "-")
+            s3_key = f"{folder}/{unique_filename}"
+        else:
+            s3_key = f"uploads/{unique_filename}"
         try:
             s3_client.put_object(
                 Bucket=S3_BUCKET_NAME,
