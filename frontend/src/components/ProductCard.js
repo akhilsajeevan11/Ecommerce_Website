@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Heart } from 'lucide-react';
 import { useAuth, useWishlist, useAuthModal } from '../context/AppContext';
 import { toast } from 'sonner';
+import { getImageUrl } from '../utils/getImageUrl';
 
 const ProductCard = ({ product }) => {
   const { user } = useAuth();
@@ -41,7 +42,7 @@ const ProductCard = ({ product }) => {
         marginBottom: '12px'
       }}>
         <img
-          src={product.images?.[0] || 'https://via.placeholder.com/400x500'}
+          src={getImageUrl(product.images?.[0]) || 'https://via.placeholder.com/400x500'}
           alt={product.name}
           style={{ 
             width: '100%', 

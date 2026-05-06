@@ -1,5 +1,4 @@
 import os
-from motor.motor_asyncio import AsyncIOMotorClient
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from dotenv import load_dotenv
 
@@ -10,18 +9,7 @@ JWT_SECRET = os.getenv("JWT_SECRET")
 if not JWT_SECRET:
     raise RuntimeError("JWT_SECRET environment variable is required")
 
-# ── MongoDB (existing — products, orders, etc.) ──────────
-MONGO_URL = os.getenv("MONGODB_URL")
-DATABASE_NAME = os.getenv("DATABASE_NAME")
-if not MONGO_URL:
-    raise RuntimeError("MONGODB_URL environment variable is required")
-if not DATABASE_NAME:
-    raise RuntimeError("DATABASE_NAME environment variable is required")
-
-mongo_client = AsyncIOMotorClient(MONGO_URL)
-db = mongo_client[DATABASE_NAME]
-
-# ── PostgreSQL (new — users/auth) ─────────────────────────
+# ── PostgreSQL ────────────────────────────────────────────
 DB_HOST = os.getenv("DB_HOST")
 DB_PORT = os.getenv("DB_PORT")
 DB_NAME = os.getenv("DB_NAME")

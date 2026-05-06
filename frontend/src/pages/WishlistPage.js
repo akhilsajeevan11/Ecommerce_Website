@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import { Heart, ShoppingCart, X, ShoppingBag } from 'lucide-react';
+import { getImageUrl } from '../utils/getImageUrl';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -103,7 +104,7 @@ const WishlistPage = () => {
               transition={{ duration: 0.4, delay: idx * 0.05 }}>
               <div style={{ position: 'relative', border: '1px solid #e4e4e7', overflow: 'hidden' }}>
                 <Link to={`/product/${product.id}`}>
-                  <img src={product.images?.[0] || 'https://via.placeholder.com/400x500'} alt={product.name}
+                  <img src={getImageUrl(product.images?.[0]) || 'https://via.placeholder.com/400x500'} alt={product.name}
                     style={{ width: '100%', aspectRatio: '3/4', objectFit: 'cover', display: 'block', filter: 'grayscale(30%)' }} />
                 </Link>
                 <button onClick={() => handleRemove(product.id)}

@@ -5,6 +5,7 @@ import { useCart, useAuth } from '../context/AppContext';
 import { X, Minus, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { getImageUrl } from '../utils/getImageUrl';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -81,7 +82,7 @@ const CartDrawer = ({ children }) => {
                       <div key={idx} className="flex gap-6 group" data-testid={`cart-item-${idx}`}>
                         <div className="relative aspect-square w-24 h-24 overflow-hidden bg-zinc-100">
                           <img
-                            src={product.images[0]}
+                            src={getImageUrl(product.images[0])}
                             alt={product.name}
                             className="w-full h-full object-cover grayscale transition-all duration-500 group-hover:grayscale-0 group-hover:scale-110"
                           />

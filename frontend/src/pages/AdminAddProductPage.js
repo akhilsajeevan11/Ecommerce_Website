@@ -1,9 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Upload, X, ImageIcon, Film } from 'lucide-react';
+import { Upload, X, ImageIcon, Film, Loader } from 'lucide-react';
 import { MOCK_CATEGORIES } from '../data/adminMockData';
 import { validateProductForm } from '../utils/validateProductForm';
+import { isAdminSubdomain } from '../utils/subdomain';
+import { useAuth } from '../context/AppContext';
+import axios from 'axios';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
 
 const INITIAL_FORM = {
   name: '',
@@ -54,11 +60,13 @@ const errorStyle = {
 
 const AdminAddProductPage = () => {
   const navigate = useNavigate();
+  const { token } = useAuth();
   const [form, setForm] = useState(INITIAL_FORM);
   const [errors, setErrors] = useState({});
   const [imageFile, setImageFile] = useState(null);
   const [videoFile, setVideoFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const set = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -103,7 +111,7 @@ const AdminAddProductPage = () => {
     setVideoFile(file);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const errs = validateProductForm(form);
     if (Object.keys(errs).length) {
@@ -111,24 +119,58 @@ const AdminAddProductPage = () => {
       return;
     }
 
-    const newProduct = {
-      id: Date.now().toString(),
-      name: form.name.trim(),
-      barcode_id: form.barcode_id.trim(),
-      description: form.description.trim(),
-      price: parseFloat(form.price),
-      category: form.category.trim(),
-      stock: parseInt(form.stock, 10),
-      sizes: form.sizes ? form.sizes.split(',').map((s) => s.trim()).filter(Boolean) : [],
-      colors: form.colors ? form.colors.split(',').map((c) => c.trim()).filter(Boolean) : [],
-      images: imageFile ? [imageFile.name] : [],
-      story: form.story.trim() || null,
-      video_url: videoFile ? videoFile.name : null,
-    };
+    setSubmitting(true);
+    const headers = { Authorization: `Bearer ${token}` };
 
-    void newProduct;
-    toast.success('Product created successfully');
-    navigate('/admin/products');
+    try {
+      // Step 1: Upload image to S3 via backend (if provided)
+      let imageUrl = null;
+      if (imageFile) {
+        const formData = new FormData();
+        formData.append('file', imageFile);
+        const uploadResp = await axios.post(`${API}/admin/upload`, formData, {
+          headers: { ...headers, 'Content-Type': 'multipart/form-data' },
+        });
+        imageUrl = uploadResp.data.url;
+      }
+
+      // Step 2: Upload video to S3 (if provided)
+      let videoUrl = null;
+      if (videoFile) {
+        const formData = new FormData();
+        formData.append('file', videoFile);
+        const uploadResp = await axios.post(`${API}/admin/upload`, formData, {
+          headers: { ...headers, 'Content-Type': 'multipart/form-data' },
+        });
+        videoUrl = uploadResp.data.url;
+      }
+
+      // Step 3: Create product with all data
+      const productPayload = {
+        name: form.name.trim(),
+        description: form.description.trim(),
+        price: parseFloat(form.price),
+        category: form.category.trim(),
+        stock: parseInt(form.stock, 10),
+        sizes: form.sizes ? form.sizes.split(',').map((s) => s.trim()).filter(Boolean) : [],
+        colors: form.colors ? form.colors.split(',').map((c) => c.trim()).filter(Boolean) : [],
+        images: imageUrl ? [imageUrl] : [],
+        barcode_id: form.barcode_id.trim() || null,
+        story: form.story.trim() || null,
+        video_url: videoUrl,
+      };
+
+      await axios.post(`${API}/products`, productPayload, { headers });
+
+      toast.success('Product created successfully');
+      navigate(isAdminSubdomain() ? '/products' : '/admin/products');
+    } catch (error) {
+      console.error('Create product error:', error);
+      const detail = error.response?.data?.detail || 'Failed to create product';
+      toast.error(detail);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const fieldLabel = (label, required) => (
@@ -244,23 +286,34 @@ const AdminAddProductPage = () => {
         <div style={{ paddingTop: '0.5rem' }}>
           <button
             type="submit"
+            disabled={submitting}
             style={{
               width: '100%',
               padding: '0.625rem 1rem',
-              backgroundColor: '#000',
+              backgroundColor: submitting ? '#71717a' : '#000',
               color: '#fff',
               border: 'none',
-              cursor: 'pointer',
+              cursor: submitting ? 'not-allowed' : 'pointer',
               fontSize: '0.875rem',
               fontWeight: 500,
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: '0.5rem',
+              opacity: submitting ? 0.7 : 1,
             }}
           >
-            <Upload style={{ width: '1rem', height: '1rem' }} />
-            Create Product
+            {submitting ? (
+              <>
+                <Loader style={{ width: '1rem', height: '1rem', animation: 'spin 1s linear infinite' }} />
+                Creating...
+              </>
+            ) : (
+              <>
+                <Upload style={{ width: '1rem', height: '1rem' }} />
+                Create Product
+              </>
+            )}
           </button>
         </div>
       </form>

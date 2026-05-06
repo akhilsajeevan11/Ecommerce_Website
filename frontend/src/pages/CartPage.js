@@ -6,6 +6,7 @@ import { Minus, Plus, X, ShoppingBag, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
 import { motion } from 'framer-motion';
+import { getImageUrl } from '../utils/getImageUrl';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -142,7 +143,7 @@ const CartPage = () => {
                   {/* Product Image */}
                   <Link to={`/product/${product.id}`}>
                     <img
-                      src={product.images?.[0] || 'https://via.placeholder.com/150'}
+                      src={getImageUrl(product.images?.[0]) || 'https://via.placeholder.com/150'}
                       alt={product.name}
                       className="w-28 h-36 object-cover grayscale-image"
                     />

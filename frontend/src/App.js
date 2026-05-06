@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProviders } from './context/AppContext';
 import { Toaster } from 'sonner';
+import { isAdminSubdomain } from './utils/subdomain';
 import Navigation from './components/Navigation';
 import './App.css';
 
@@ -30,34 +31,62 @@ const LoadingScreen = () => (
   </div>
 );
 
+function AdminApp() {
+  return (
+    <Suspense fallback={<LoadingScreen />}>
+      <Routes>
+        <Route path="/" element={<AdminLayout />}>
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<AdminDashboardPage />} />
+          <Route path="products" element={<AdminProductsPage />} />
+          <Route path="products/add" element={<AdminAddProductPage />} />
+          <Route path="stock" element={<AdminProductStockPage />} />
+          <Route path="dead-stock" element={<AdminDeadStockPage />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      </Routes>
+    </Suspense>
+  );
+}
+
+function CustomerApp() {
+  return (
+    <>
+      <Navigation />
+      <Suspense fallback={<LoadingScreen />}>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/shop" element={<ProductListPage />} />
+          <Route path="/product/:id" element={<ProductDetailPage />} />
+          <Route path="/cart" element={<CartPage />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/orders" element={<OrdersPage />} />
+          <Route path="/wishlist" element={<WishlistPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/social-auth-callback" element={<SocialAuthCallback />} />
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<AdminDashboardPage />} />
+            <Route path="products" element={<AdminProductsPage />} />
+            <Route path="products/add" element={<AdminAddProductPage />} />
+            <Route path="stock" element={<AdminProductStockPage />} />
+            <Route path="dead-stock" element={<AdminDeadStockPage />} />
+          </Route>
+        </Routes>
+      </Suspense>
+    </>
+  );
+}
+
 function App() {
+  const adminMode = isAdminSubdomain();
+
   return (
     <AppProviders>
       <BrowserRouter>
         <div className="App">
           <div className="noise-overlay"></div>
-          <Navigation />
-          <Suspense fallback={<LoadingScreen />}>
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/shop" element={<ProductListPage />} />
-              <Route path="/product/:id" element={<ProductDetailPage />} />
-              <Route path="/cart" element={<CartPage />} />
-              <Route path="/checkout" element={<CheckoutPage />} />
-              <Route path="/orders" element={<OrdersPage />} />
-              <Route path="/wishlist" element={<WishlistPage />} />
-              <Route path="/profile" element={<ProfilePage />} />
-              <Route path="/social-auth-callback" element={<SocialAuthCallback />} />
-              <Route path="/admin" element={<AdminLayout />}>
-                <Route index element={<Navigate to="dashboard" replace />} />
-                <Route path="dashboard" element={<AdminDashboardPage />} />
-                <Route path="products" element={<AdminProductsPage />} />
-                <Route path="products/add" element={<AdminAddProductPage />} />
-                <Route path="stock" element={<AdminProductStockPage />} />
-                <Route path="dead-stock" element={<AdminDeadStockPage />} />
-              </Route>
-            </Routes>
-          </Suspense>
+          {adminMode ? <AdminApp /> : <CustomerApp />}
           <Toaster position="top-right" richColors />
         </div>
       </BrowserRouter>

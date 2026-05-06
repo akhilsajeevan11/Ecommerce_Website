@@ -37,6 +37,11 @@ mongodb_27018.log*
 
 # Uploads / Media
 backend/uploads/
+backend/backend/uploads/
+
+# Tests (property-based test artifacts)
+backend/tests/
+frontend/src/__tests__/
 
 # Archives / Backups
 *.zip
@@ -60,7 +65,7 @@ Thumbs.db
 images/
 frontend/public/uploads/
 
-# Root Scripts and Files (Keeping only frontend/backend focused)
+# Root Scripts and Files
 download_images.py
 seed_db.py
 design_guidelines.json

@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import { CheckCircle, Loader2 } from 'lucide-react';
+import { getImageUrl } from '../utils/getImageUrl';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -386,7 +387,7 @@ const CheckoutPage = () => {
                   return (
                     <div key={idx} className="flex gap-4">
                       <img
-                        src={product.images?.[0] || 'https://via.placeholder.com/80'}
+                        src={getImageUrl(product.images?.[0]) || 'https://via.placeholder.com/80'}
                         alt={product.name}
                         className="w-16 h-20 object-cover grayscale"
                       />
