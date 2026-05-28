@@ -1,17 +1,22 @@
 import React, { useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { BarChart3, Package, Plus, ClipboardList, AlertTriangle } from 'lucide-react';
-import { useAuth } from '../context/AppContext';
-import { USE_MOCK } from '../data/adminMockData';
+import { BarChart3, Package, Plus, ClipboardList, AlertTriangle, Settings } from 'lucide-react';
+import { useAuth } from '../../context/AppContext';
+import { isAdminSubdomain } from '../../utils/subdomain';
 import { toast } from 'sonner';
 
-const NAV_LINKS = [
-  { label: 'Dashboard', path: '/admin/dashboard', icon: BarChart3 },
-  { label: 'Products', path: '/admin/products', icon: Package },
-  { label: 'Product Stock', path: '/admin/stock', icon: ClipboardList },
-  { label: 'Dead Stock', path: '/admin/dead-stock', icon: AlertTriangle },
-  { label: 'Add Product', path: '/admin/products/add', icon: Plus },
-];
+// Paths differ based on whether we're on admin subdomain or customer site
+const getNavLinks = () => {
+  const prefix = isAdminSubdomain() ? '' : '/admin';
+  return [
+    { label: 'Dashboard', path: `${prefix}/dashboard`, icon: BarChart3 },
+    { label: 'Products', path: `${prefix}/products`, icon: Package },
+    { label: 'Product Stock', path: `${prefix}/stock`, icon: ClipboardList },
+    { label: 'Dead Stock', path: `${prefix}/dead-stock`, icon: AlertTriangle },
+    { label: 'Add Product', path: `${prefix}/products/add`, icon: Plus },
+    { label: 'Site Settings', path: `${prefix}/site-settings`, icon: Settings },
+  ];
+};
 
 const AdminLayout = () => {
   const location = useLocation();
@@ -19,13 +24,13 @@ const AdminLayout = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!USE_MOCK && (!token || !user?.is_admin)) {
+    if (!token || !user?.is_admin) {
       toast.error('Admin access required');
       navigate('/');
     }
   }, [token, user, navigate]);
 
-  if (!USE_MOCK && (!token || !user?.is_admin)) {
+  if (!token || !user?.is_admin) {
     return null;
   }
 
@@ -52,7 +57,7 @@ const AdminLayout = () => {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-          {NAV_LINKS.map(({ label, path, icon: Icon }) => {
+          {getNavLinks().map(({ label, path, icon: Icon }) => {
             const isActive = location.pathname === path;
             return (
               <Link

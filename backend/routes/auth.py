@@ -168,13 +168,12 @@ async def update_profile(body: ProfileUpdate, current_user=Depends(get_current_u
 from urllib.parse import urlencode
 from fastapi.responses import RedirectResponse
 from config import (
-    GOOGLE_CLIENT_ID, MICROSOFT_CLIENT_ID, FRONTEND_URL,
+    GOOGLE_CLIENT_ID, MICROSOFT_CLIENT_ID, FRONTEND_URL, BACKEND_URL,
 )
 from services.social_auth_service import (
     get_google_user_info, get_microsoft_user_info, find_or_create_social_user,
 )
 
-BACKEND_URL = "http://localhost:8000"
 
 
 @router.get("/google")

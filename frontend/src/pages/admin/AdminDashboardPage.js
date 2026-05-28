@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useAuth } from '../context/AppContext';
+import { useAuth } from '../../context/AppContext';
 import { toast } from 'sonner';
 import axios from 'axios';
 import { motion } from 'framer-motion';
@@ -8,8 +8,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
 } from 'recharts';
-import { getStockStatus } from '../utils/stockStatus';
-import { MOCK_PRODUCTS, MOCK_CATEGORIES, MOCK_SUMMARY, MOCK_DEAD_STOCK, USE_MOCK } from '../data/adminMockData';
+import { getStockStatus } from '../../utils/stockStatus';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -155,15 +154,14 @@ const FilterBar = ({ categories, categoryFilter, stockStatusFilter, onCategoryCh
 const AdminDashboardPage = () => {
   const { token, user } = useAuth();
 
-  const [productStock, setProductStock] = useState(USE_MOCK ? MOCK_PRODUCTS : []);
-  const [categoryStock, setCategoryStock] = useState(USE_MOCK ? MOCK_CATEGORIES : []);
+  const [productStock, setProductStock] = useState([]);
+  const [categoryStock, setCategoryStock] = useState([]);
   const [loading, setLoading] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [stockStatusFilter, setStockStatusFilter] = useState('all');
 
-  /* ── Data fetching (only when USE_MOCK is false) ──── */
+  /* ── Data fetching ──── */
   const fetchData = useCallback(async () => {
-    if (USE_MOCK) return;
     if (!token || !user?.is_admin) return;
     setLoading(true);
     const headers = { Authorization: `Bearer ${token}` };

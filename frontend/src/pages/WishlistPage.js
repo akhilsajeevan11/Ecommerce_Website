@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import { Heart, ShoppingCart, X, ShoppingBag } from 'lucide-react';
+import { getImageUrl } from '../utils/getImageUrl';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -48,10 +49,24 @@ const WishlistPage = () => {
   };
 
   const handleAddToCart = async (product) => {
+    if (product.stock === 0) {
+      toast.error('Product is out of stock');
+      return;
+    }
+
     const defaultSize = product.sizes?.[0] || 'M';
     const defaultColor = product.colors?.[0] || 'Black';
-    await addToCart(product, defaultSize, defaultColor, 1);
-    toast.success('Added to cart');
+
+    try {
+      await addToCart(product, defaultSize, defaultColor, 1);
+      toast.success(`${product.name} added to cart`);
+    } catch (error) {
+      if (error.message === 'MAX_QUANTITY_EXCEEDED') {
+        toast.error('Maximum quantity reached (10)');
+      } else {
+        toast.error('Could not add to cart');
+      }
+    }
   };
 
   const handleRemove = async (productId) => {
@@ -103,7 +118,7 @@ const WishlistPage = () => {
               transition={{ duration: 0.4, delay: idx * 0.05 }}>
               <div style={{ position: 'relative', border: '1px solid #e4e4e7', overflow: 'hidden' }}>
                 <Link to={`/product/${product.id}`}>
-                  <img src={product.images?.[0] || 'https://via.placeholder.com/400x500'} alt={product.name}
+                  <img src={getImageUrl(product.images?.[0]) || 'https://via.placeholder.com/400x500'} alt={product.name}
                     style={{ width: '100%', aspectRatio: '3/4', objectFit: 'cover', display: 'block', filter: 'grayscale(30%)' }} />
                 </Link>
                 <button onClick={() => handleRemove(product.id)}
@@ -112,8 +127,9 @@ const WishlistPage = () => {
                 </button>
                 <div style={{ padding: '12px', borderTop: '1px solid #f4f4f5' }}>
                   <button onClick={() => handleAddToCart(product)}
-                    style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px', backgroundColor: '#000', color: '#fff', border: 'none', cursor: 'pointer', fontFamily: "'Manrope', sans-serif", fontSize: '12px', fontWeight: 500 }}>
-                    <ShoppingCart style={{ width: '14px', height: '14px' }} />Add to Cart
+                    disabled={product.stock === 0}
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px', backgroundColor: product.stock === 0 ? '#a1a1aa' : '#000', color: '#fff', border: 'none', cursor: product.stock === 0 ? 'not-allowed' : 'pointer', fontFamily: "'Manrope', sans-serif", fontSize: '12px', fontWeight: 500, opacity: product.stock === 0 ? 0.7 : 1 }}>
+                    <ShoppingCart style={{ width: '14px', height: '14px' }} />{product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
                   </button>
                 </div>
               </div>

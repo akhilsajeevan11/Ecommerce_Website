@@ -8,6 +8,7 @@ import { useAuth, useCart, useWishlist, useAuthModal } from '../context/AppConte
 import { toast } from 'sonner';
 import axios from 'axios';
 import { motion } from 'framer-motion';
+import { getImageUrl } from '../utils/getImageUrl';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -63,8 +64,19 @@ const ProductDetailPage = () => {
   const handleAddToCart = async () => {
     if (!user) { openAuthModal('login'); return; }
     if (!selectedSize || !selectedColor) { toast.error('Please select size and color'); return; }
-    await addToCart(product, selectedSize, selectedColor, quantity);
-    toast.success('Added to cart');
+
+    try {
+      await addToCart(product, selectedSize, selectedColor, quantity);
+      toast.success('Added to cart');
+    } catch (error) {
+      if (error.message === 'MAX_QUANTITY_EXCEEDED') {
+        toast.error('Maximum quantity reached (10)');
+      } else if (error.message === 'INSUFFICIENT_STOCK') {
+        toast.error(`Only ${product.stock} available`);
+      } else {
+        toast.error('Could not add to cart');
+      }
+    }
   };
 
   const handleWishlist = () => {
@@ -127,7 +139,7 @@ const ProductDetailPage = () => {
                 <TabsContent value="image" style={{ marginTop: 0 }}>
                   <div style={{ position: 'relative', background: '#fafafa', marginBottom: '16px', overflow: 'hidden' }}>
                     <img
-                      src={product.images?.[selectedImage] || product.images?.[0]}
+                      src={getImageUrl(product.images?.[selectedImage] || product.images?.[0])}
                       alt={product.name}
                       style={{ width: '100%', aspectRatio: '4/5', objectFit: 'cover', filter: 'grayscale(100%)', transition: 'filter 0.4s ease, transform 0.5s ease' }}
                       onMouseOver={(e) => { e.target.style.filter = 'grayscale(0%)'; e.target.style.transform = 'scale(1.03)'; }}
@@ -148,7 +160,7 @@ const ProductDetailPage = () => {
                           width: '64px', height: '80px', overflow: 'hidden', border: selectedImage === idx ? '2px solid #000' : '2px solid #e4e4e7',
                           cursor: 'pointer', padding: 0, background: 'none', borderRadius: 0
                         }}>
-                          <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          <img src={getImageUrl(img)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         </button>
                       ))}
                     </div>

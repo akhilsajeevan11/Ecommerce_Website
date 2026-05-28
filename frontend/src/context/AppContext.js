@@ -132,13 +132,17 @@ export const AppProviders = ({ children }) => {
 
   const updateCart = async (items) => {
     if (!token) return;
+    const previousCart = { ...cart };
+    setCart({ items: items }); // Optimistic update
     try {
       const response = await axios.post(`${API}/cart`, { items }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setCart(response.data);
     } catch (error) {
+      setCart(previousCart); // Rollback on failure
       console.error('Update cart error:', error);
+      throw error;
     }
   };
 
@@ -147,25 +151,53 @@ export const AppProviders = ({ children }) => {
       item => item.product_id === product.id && item.size === size && item.color === color
     );
 
+    const newQuantity = existingItem ? existingItem.quantity + quantity : quantity;
+
+    // Enforce max 10 units per item
+    if (newQuantity > 10) {
+      throw new Error('MAX_QUANTITY_EXCEEDED');
+    }
+
+    // Enforce stock limit
+    if (newQuantity > product.stock) {
+      throw new Error('INSUFFICIENT_STOCK');
+    }
+
+    const previousCart = { ...cart };
     let newItems;
     if (existingItem) {
       newItems = cart.items.map(item =>
         item.product_id === product.id && item.size === size && item.color === color
-          ? { ...item, quantity: item.quantity + quantity }
+          ? { ...item, quantity: newQuantity }
           : item
       );
     } else {
       newItems = [...cart.items, { product_id: product.id, quantity, size, color }];
     }
 
-    await updateCart(newItems);
+    try {
+      await updateCart(newItems);
+    } catch (error) {
+      setCart(previousCart); // Rollback on failure
+      throw error;
+    }
   };
 
   const removeFromCart = async (productId, size, color) => {
+    const previousCart = { ...cart };
     const newItems = cart.items.filter(
       item => !(item.product_id === productId && item.size === size && item.color === color)
     );
-    await updateCart(newItems);
+    setCart({ items: newItems }); // Optimistic removal
+    try {
+      const response = await axios.post(`${API}/cart`, { items: newItems }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setCart(response.data); // Update with server response
+    } catch (error) {
+      setCart(previousCart); // Rollback on failure
+      throw error;
+    }
   };
 
   const clearCart = () => {

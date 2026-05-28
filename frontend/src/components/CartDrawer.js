@@ -4,7 +4,9 @@ import { Button } from './ui/button';
 import { useCart, useAuth } from '../context/AppContext';
 import { X, Minus, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import axios from 'axios';
+import { getImageUrl } from '../utils/getImageUrl';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -35,12 +37,19 @@ const CartDrawer = ({ children }) => {
 
   const updateQuantity = async (item, newQuantity) => {
     if (newQuantity < 1) return;
+    const product = products[item.product_id];
+    if (product && newQuantity > Math.min(product.stock, 10)) return;
     const newItems = cart.items.map(i =>
       i.product_id === item.product_id && i.size === item.size && i.color === item.color
         ? { ...i, quantity: newQuantity }
         : i
     );
     await updateCart(newItems);
+  };
+
+  const handleRemove = async (item) => {
+    await removeFromCart(item.product_id, item.size, item.color);
+    toast.success('Item removed from cart');
   };
 
   const getTotal = () => {
@@ -81,7 +90,7 @@ const CartDrawer = ({ children }) => {
                       <div key={idx} className="flex gap-6 group" data-testid={`cart-item-${idx}`}>
                         <div className="relative aspect-square w-24 h-24 overflow-hidden bg-zinc-100">
                           <img
-                            src={product.images[0]}
+                            src={getImageUrl(product.images[0])}
                             alt={product.name}
                             className="w-full h-full object-cover grayscale transition-all duration-500 group-hover:grayscale-0 group-hover:scale-110"
                           />
@@ -100,16 +109,18 @@ const CartDrawer = ({ children }) => {
                           <div className="flex items-center justify-between mt-4">
                             <div className="flex items-center border border-zinc-200">
                               <button
-                                className="px-2 py-1 hover:bg-zinc-50 transition-colors"
+                                className="px-2 py-1 hover:bg-zinc-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                                 onClick={() => updateQuantity(item, item.quantity - 1)}
+                                disabled={item.quantity <= 1}
                                 data-testid={`cart-decrease-${idx}`}
                               >
                                 <Minus className="h-3 w-3" />
                               </button>
                               <span className="font-mono text-xs w-8 text-center">{item.quantity}</span>
                               <button
-                                className="px-2 py-1 hover:bg-zinc-50 transition-colors"
+                                className="px-2 py-1 hover:bg-zinc-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                                 onClick={() => updateQuantity(item, item.quantity + 1)}
+                                disabled={item.quantity >= product.stock || item.quantity >= 10}
                                 data-testid={`cart-increase-${idx}`}
                               >
                                 <Plus className="h-3 w-3" />
@@ -117,7 +128,7 @@ const CartDrawer = ({ children }) => {
                             </div>
                             <button
                               className="text-[10px] font-mono uppercase tracking-widest text-zinc-400 hover:text-black transition-colors"
-                              onClick={() => removeFromCart(item.product_id, item.size, item.color)}
+                              onClick={() => handleRemove(item)}
                               data-testid={`cart-remove-${idx}`}
                             >
                               Remove

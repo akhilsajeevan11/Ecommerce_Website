@@ -1,10 +1,9 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { useAuth } from '../context/AppContext';
+import { useAuth } from '../../context/AppContext';
 import { toast } from 'sonner';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import { Plus, X } from 'lucide-react';
-import { MOCK_PRODUCTS, MOCK_CATEGORIES, USE_MOCK } from '../data/adminMockData';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -57,8 +56,8 @@ const REMARK_SUGGESTIONS = ['Damaged', 'Returned', 'Expired', 'Defective', 'Unso
 
 const AdminDeadStockPage = () => {
   const { token, user } = useAuth();
-  const [products, setProducts] = useState(USE_MOCK ? MOCK_PRODUCTS : []);
-  const [categoryStock, setCategoryStock] = useState(USE_MOCK ? MOCK_CATEGORIES : []);
+  const [products, setProducts] = useState([]);
+  const [categoryStock, setCategoryStock] = useState([]);
   const [loading, setLoading] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [remarks, setRemarks] = useState({});
@@ -70,7 +69,6 @@ const AdminDeadStockPage = () => {
   const [addErrors, setAddErrors] = useState({});
 
   const fetchData = useCallback(async () => {
-    if (USE_MOCK) return;
     if (!token || !user?.is_admin) return;
     setLoading(true);
     const headers = { Authorization: `Bearer ${token}` };
