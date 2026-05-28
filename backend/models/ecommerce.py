@@ -235,3 +235,17 @@ class Wishlist(Base):
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
     )
+
+
+# ── Site Settings ─────────────────────────────────────────
+class SiteSettings(Base):
+    __tablename__ = "site_settings"
+
+    key = Column(String(100), primary_key=True)
+    value = Column(Text, nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )

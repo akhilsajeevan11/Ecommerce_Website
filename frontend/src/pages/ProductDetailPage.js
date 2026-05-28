@@ -64,8 +64,19 @@ const ProductDetailPage = () => {
   const handleAddToCart = async () => {
     if (!user) { openAuthModal('login'); return; }
     if (!selectedSize || !selectedColor) { toast.error('Please select size and color'); return; }
-    await addToCart(product, selectedSize, selectedColor, quantity);
-    toast.success('Added to cart');
+
+    try {
+      await addToCart(product, selectedSize, selectedColor, quantity);
+      toast.success('Added to cart');
+    } catch (error) {
+      if (error.message === 'MAX_QUANTITY_EXCEEDED') {
+        toast.error('Maximum quantity reached (10)');
+      } else if (error.message === 'INSUFFICIENT_STOCK') {
+        toast.error(`Only ${product.stock} available`);
+      } else {
+        toast.error('Could not add to cart');
+      }
+    }
   };
 
   const handleWishlist = () => {

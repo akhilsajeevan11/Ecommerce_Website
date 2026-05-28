@@ -30,6 +30,10 @@ class ProductCreate(BaseModel):
     video_url: Optional[str] = None
 
 
+class FeaturedUpdate(BaseModel):
+    is_featured: bool
+
+
 def _serialize_product(product: Product) -> dict:
     """Convert a Product ORM instance to the API response dict."""
     return {
@@ -47,26 +51,62 @@ def _serialize_product(product: Product) -> dict:
         "barcode_id": product.barcode_id,
         "story": product.story,
         "video_url": product.video_url,
+        "is_featured": product.is_featured,
         "created_at": product.created_at.isoformat() if product.created_at else None,
     }
 
 
 @router.get("")
-async def get_products():
+async def get_products(featured: Optional[str] = None):
     async with PgSession() as session:
-        stmt = (
-            select(Product)
-            .where(Product.is_active == True)
-            .options(
-                selectinload(Product.category_rel),
-                selectinload(Product.media),
-                selectinload(Product.sizes),
-                selectinload(Product.colors),
+        if featured == "true":
+            # Fetch products where is_featured is True
+            stmt = (
+                select(Product)
+                .where(Product.is_active == True, Product.is_featured == True)
+                .options(
+                    selectinload(Product.category_rel),
+                    selectinload(Product.media),
+                    selectinload(Product.sizes),
+                    selectinload(Product.colors),
+                )
             )
-        )
-        result = await session.execute(stmt)
-        products = result.scalars().all()
-        return [_serialize_product(p) for p in products]
+            result = await session.execute(stmt)
+            products = result.scalars().all()
+
+            # Fallback: if no featured products, return 6 most recently created
+            if not products:
+                stmt = (
+                    select(Product)
+                    .where(Product.is_active == True)
+                    .order_by(Product.created_at.desc())
+                    .limit(6)
+                    .options(
+                        selectinload(Product.category_rel),
+                        selectinload(Product.media),
+                        selectinload(Product.sizes),
+                        selectinload(Product.colors),
+                    )
+                )
+                result = await session.execute(stmt)
+                products = result.scalars().all()
+
+            return [_serialize_product(p) for p in products]
+        else:
+            # Default: return all active products
+            stmt = (
+                select(Product)
+                .where(Product.is_active == True)
+                .options(
+                    selectinload(Product.category_rel),
+                    selectinload(Product.media),
+                    selectinload(Product.sizes),
+                    selectinload(Product.colors),
+                )
+            )
+            result = await session.execute(stmt)
+            products = result.scalars().all()
+            return [_serialize_product(p) for p in products]
 
 
 @router.get("/{product_id}")
@@ -86,6 +126,33 @@ async def get_product(product_id: str):
         product = result.scalar_one_or_none()
         if not product:
             raise HTTPException(status_code=404, detail="Product not found")
+        return _serialize_product(product)
+
+
+@router.patch("/{product_id}/featured")
+async def update_product_featured(product_id: str, body: FeaturedUpdate, current_user=Depends(get_current_user)):
+    if not current_user.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Admin access required")
+
+    async with PgSession() as session:
+        stmt = (
+            select(Product)
+            .where(Product.id == product_id)
+            .options(
+                selectinload(Product.category_rel),
+                selectinload(Product.media),
+                selectinload(Product.sizes),
+                selectinload(Product.colors),
+            )
+        )
+        result = await session.execute(stmt)
+        product = result.scalar_one_or_none()
+        if not product:
+            raise HTTPException(status_code=404, detail="Product not found")
+
+        product.is_featured = body.is_featured
+        await session.commit()
+        await session.refresh(product)
         return _serialize_product(product)
 
 

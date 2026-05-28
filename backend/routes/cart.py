@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional
 
@@ -6,7 +6,7 @@ from sqlalchemy import select, delete
 
 from config import PgSession
 from dependencies import get_current_user
-from models.ecommerce import CartItem
+from models.ecommerce import CartItem, Product
 
 router = APIRouter(prefix="/api/cart", tags=["cart"])
 
@@ -44,10 +44,43 @@ async def get_cart(current_user=Depends(get_current_user)):
 async def update_cart(cart_data: CartUpdate, current_user=Depends(get_current_user)):
     user_id = current_user["id"]
     async with PgSession() as session:
-        # Clear existing cart items for this user
+        # Validate all items before persisting
+        for item in cart_data.items:
+            # Check quantity >= 1
+            if item.quantity < 1:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Quantity must be at least 1",
+                )
+
+            # Check quantity <= 10
+            if item.quantity > 10:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Maximum quantity per item is 10",
+                )
+
+            # Fetch product and validate stock
+            product_result = await session.execute(
+                select(Product).where(Product.id == item.product_id)
+            )
+            product = product_result.scalar_one_or_none()
+
+            if product is None:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Product {item.product_id} not found",
+                )
+
+            if item.quantity > product.stock:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Insufficient stock for {product.name}. Available: {product.stock}",
+                )
+
+        # All items validated — proceed with delete-and-insert
         await session.execute(delete(CartItem).where(CartItem.user_id == user_id))
 
-        # Insert new items
         import uuid
 
         for item in cart_data.items:

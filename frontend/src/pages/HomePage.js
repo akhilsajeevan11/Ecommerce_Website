@@ -10,15 +10,28 @@ const API = `${BACKEND_URL}/api`;
 
 const HomePage = () => {
   const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [heroBannerUrl, setHeroBannerUrl] = useState(null);
 
   useEffect(() => {
     loadFeaturedProducts();
+    loadSiteSettings();
   }, []);
+
+  const loadSiteSettings = async () => {
+    try {
+      const response = await axios.get(`${API}/site-settings`);
+      if (response.data && response.data.hero_banner_url) {
+        setHeroBannerUrl(response.data.hero_banner_url);
+      }
+    } catch (error) {
+      console.error('Error fetching site settings:', error);
+    }
+  };
 
   const loadFeaturedProducts = async () => {
     try {
-      const response = await axios.get(`${API}/products`);
-      setFeaturedProducts(response.data.slice(0, 6));
+      const response = await axios.get(`${API}/products?featured=true`);
+      setFeaturedProducts(response.data);
     } catch (error) {
       console.error('Error fetching featured products:', error);
     }
@@ -33,18 +46,20 @@ const HomePage = () => {
         overflow: 'hidden',
         background: '#000'
       }}>
-        <div style={{ position: 'absolute', inset: 0 }}>
-          <img
-            src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=2000&auto=format&fit=crop"
-            alt="Monochrome Luxury"
-            style={{ 
-              width: '100%', 
-              height: '100%', 
-              objectFit: 'cover', 
-              filter: 'grayscale(100%) brightness(0.7)',
-            }}
-          />
-        </div>
+        {heroBannerUrl && (
+          <div style={{ position: 'absolute', inset: 0 }}>
+            <img
+              src={heroBannerUrl}
+              alt="Monochrome Luxury"
+              style={{ 
+                width: '100%', 
+                height: '100%', 
+                objectFit: 'cover', 
+                filter: 'grayscale(100%) brightness(0.7)',
+              }}
+            />
+          </div>
+        )}
         
         <div style={{ 
           position: 'relative', 

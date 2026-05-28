@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Upload, X, ImageIcon, Film, Loader } from 'lucide-react';
-import { MOCK_CATEGORIES } from '../data/adminMockData';
-import { validateProductForm } from '../utils/validateProductForm';
-import { isAdminSubdomain } from '../utils/subdomain';
-import { useAuth } from '../context/AppContext';
+import { validateProductForm } from '../../utils/validateProductForm';
+import { isAdminSubdomain } from '../../utils/subdomain';
+import { useAuth } from '../../context/AppContext';
 import axios from 'axios';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -57,6 +56,8 @@ const errorStyle = {
   marginTop: '0.25rem',
   fontFamily: 'JetBrains Mono, monospace',
 };
+
+const CATEGORIES = ['T-Shirt', 'Hoodie', 'Jacket', 'Pants', 'Shirt', 'Sweater'];
 
 const AdminAddProductPage = () => {
   const navigate = useNavigate();
@@ -128,6 +129,7 @@ const AdminAddProductPage = () => {
       if (imageFile) {
         const formData = new FormData();
         formData.append('file', imageFile);
+        formData.append('category', form.category.trim());
         const uploadResp = await axios.post(`${API}/admin/upload`, formData, {
           headers: { ...headers, 'Content-Type': 'multipart/form-data' },
         });
@@ -139,6 +141,7 @@ const AdminAddProductPage = () => {
       if (videoFile) {
         const formData = new FormData();
         formData.append('file', videoFile);
+        formData.append('category', form.category.trim());
         const uploadResp = await axios.post(`${API}/admin/upload`, formData, {
           headers: { ...headers, 'Content-Type': 'multipart/form-data' },
         });
@@ -219,7 +222,12 @@ const AdminAddProductPage = () => {
           </div>
           <div>
             {fieldLabel('Category', true)}
-            <input style={inputStyle} value={form.category} onChange={(e) => set('category', e.target.value)} placeholder="e.g., T-Shirt" />
+            <select style={inputStyle} value={form.category} onChange={(e) => set('category', e.target.value)}>
+              <option value="">Select a category</option>
+              {CATEGORIES.map((cat) => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
             {fieldError('category')}
           </div>
           <div>

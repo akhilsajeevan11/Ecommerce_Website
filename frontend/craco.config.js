@@ -7,6 +7,13 @@ module.exports = {
       ],
     },
   },
+  jest: {
+    configure: {
+      transformIgnorePatterns: [
+        '/node_modules/(?!(axios)/)',
+      ],
+    },
+  },
   webpack: {
     configure: (webpackConfig) => {
       webpackConfig.ignoreWarnings = [

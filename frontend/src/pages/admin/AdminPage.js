@@ -1,9 +1,8 @@
 import React, { useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { BarChart3, Package, Plus, ClipboardList, AlertTriangle } from 'lucide-react';
-import { useAuth } from '../context/AppContext';
-import { USE_MOCK } from '../data/adminMockData';
-import { isAdminSubdomain } from '../utils/subdomain';
+import { BarChart3, Package, Plus, ClipboardList, AlertTriangle, Settings } from 'lucide-react';
+import { useAuth } from '../../context/AppContext';
+import { isAdminSubdomain } from '../../utils/subdomain';
 import { toast } from 'sonner';
 
 // Paths differ based on whether we're on admin subdomain or customer site
@@ -15,6 +14,7 @@ const getNavLinks = () => {
     { label: 'Product Stock', path: `${prefix}/stock`, icon: ClipboardList },
     { label: 'Dead Stock', path: `${prefix}/dead-stock`, icon: AlertTriangle },
     { label: 'Add Product', path: `${prefix}/products/add`, icon: Plus },
+    { label: 'Site Settings', path: `${prefix}/site-settings`, icon: Settings },
   ];
 };
 
@@ -24,13 +24,13 @@ const AdminLayout = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!USE_MOCK && (!token || !user?.is_admin)) {
+    if (!token || !user?.is_admin) {
       toast.error('Admin access required');
       navigate('/');
     }
   }, [token, user, navigate]);
 
-  if (!USE_MOCK && (!token || !user?.is_admin)) {
+  if (!token || !user?.is_admin) {
     return null;
   }
 

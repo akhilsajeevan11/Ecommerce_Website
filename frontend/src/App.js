@@ -13,12 +13,13 @@ const CartPage = lazy(() => import('./pages/CartPage'));
 const CheckoutPage = lazy(() => import('./pages/CheckoutPage'));
 const OrdersPage = lazy(() => import('./pages/OrdersPage'));
 const WishlistPage = lazy(() => import('./pages/WishlistPage'));
-const AdminLayout = lazy(() => import('./pages/AdminPage'));
-const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'));
-const AdminProductsPage = lazy(() => import('./pages/AdminProductsPage'));
-const AdminAddProductPage = lazy(() => import('./pages/AdminAddProductPage'));
-const AdminProductStockPage = lazy(() => import('./pages/AdminProductStockPage'));
-const AdminDeadStockPage = lazy(() => import('./pages/AdminDeadStockPage'));
+const AdminLayout = lazy(() => import('./pages/admin/AdminPage'));
+const AdminDashboardPage = lazy(() => import('./pages/admin/AdminDashboardPage'));
+const AdminProductsPage = lazy(() => import('./pages/admin/AdminProductsPage'));
+const AdminAddProductPage = lazy(() => import('./pages/admin/AdminAddProductPage'));
+const AdminProductStockPage = lazy(() => import('./pages/admin/AdminProductStockPage'));
+const AdminDeadStockPage = lazy(() => import('./pages/admin/AdminDeadStockPage'));
+const AdminSiteSettingsPage = lazy(() => import('./pages/admin/AdminSiteSettingsPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const SocialAuthCallback = lazy(() => import('./pages/SocialAuthCallback'));
 
@@ -42,6 +43,7 @@ function AdminApp() {
           <Route path="products/add" element={<AdminAddProductPage />} />
           <Route path="stock" element={<AdminProductStockPage />} />
           <Route path="dead-stock" element={<AdminDeadStockPage />} />
+          <Route path="site-settings" element={<AdminSiteSettingsPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
@@ -71,6 +73,7 @@ function CustomerApp() {
             <Route path="products/add" element={<AdminAddProductPage />} />
             <Route path="stock" element={<AdminProductStockPage />} />
             <Route path="dead-stock" element={<AdminDeadStockPage />} />
+            <Route path="site-settings" element={<AdminSiteSettingsPage />} />
           </Route>
         </Routes>
       </Suspense>

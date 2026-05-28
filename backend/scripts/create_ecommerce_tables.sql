@@ -187,6 +187,15 @@ CREATE TABLE wishlist (
 CREATE INDEX idx_wishlist_user ON wishlist(user_id);
 
 -- ============================================================
+-- SITE SETTINGS (key-value store for CMS content)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS site_settings (
+    key VARCHAR(100) PRIMARY KEY,
+    value TEXT NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ============================================================
 -- TRIGGER: Auto-update updated_at on products
 -- ============================================================
 CREATE OR REPLACE FUNCTION update_updated_at_column()

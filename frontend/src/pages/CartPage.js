@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { useCart, useAuth } from '../context/AppContext';
-import { Minus, Plus, X, ShoppingBag, ArrowRight } from 'lucide-react';
+import { Minus, Plus, X, ShoppingBag, ArrowRight, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
 import { motion } from 'framer-motion';
@@ -17,6 +17,14 @@ const CartPage = () => {
   const [products, setProducts] = useState({});
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+
+  // Redirect non-authenticated users to home
+  useEffect(() => {
+    if (!token) {
+      toast.error('Please login to view cart');
+      navigate('/');
+    }
+  }, [token, navigate]);
 
   useEffect(() => {
     if (cart.items?.length > 0) {
@@ -46,17 +54,37 @@ const CartPage = () => {
 
   const updateQuantity = async (item, newQuantity) => {
     if (newQuantity < 1) return;
+
+    const product = products[item.product_id];
+
+    // Prevent increase beyond stock or max 10
+    if (product && newQuantity > item.quantity) {
+      if (newQuantity > product.stock || newQuantity > 10) {
+        toast.error('Maximum available stock reached');
+        return;
+      }
+    }
+
     const newItems = cart.items.map(i =>
       i.product_id === item.product_id && i.size === item.size && i.color === item.color
         ? { ...i, quantity: newQuantity }
         : i
     );
-    await updateCart(newItems);
+
+    try {
+      await updateCart(newItems);
+    } catch (error) {
+      toast.error('Failed to update quantity. Please try again.');
+    }
   };
 
   const handleRemove = async (item) => {
-    await removeFromCart(item.product_id, item.size, item.color);
-    toast.success('Item removed from cart');
+    try {
+      await removeFromCart(item.product_id, item.size, item.color);
+      toast.success('Item removed from cart');
+    } catch (error) {
+      toast.error('Failed to remove item. Please try again.');
+    }
   };
 
   const getSubtotal = () => {
@@ -82,6 +110,17 @@ const CartPage = () => {
     }
     navigate('/checkout');
   };
+
+  // Check if any item is out of stock
+  const hasOutOfStockItems = cart.items.some(item => {
+    const product = products[item.product_id];
+    return product && product.stock === 0;
+  });
+
+  // Don't render if not authenticated (redirect will happen)
+  if (!token) {
+    return null;
+  }
 
   if (loading) {
     return (
@@ -131,6 +170,9 @@ const CartPage = () => {
               const product = products[item.product_id];
               if (!product) return null;
 
+              const isOutOfStock = product.stock === 0;
+              const isAtMaxQuantity = item.quantity >= product.stock || item.quantity >= 10;
+
               return (
                 <motion.div
                   key={`${item.product_id}-${item.size}-${item.color}`}
@@ -141,13 +183,23 @@ const CartPage = () => {
                   data-testid={`cart-item-${idx}`}
                 >
                   {/* Product Image */}
-                  <Link to={`/product/${product.id}`}>
-                    <img
-                      src={getImageUrl(product.images?.[0]) || 'https://via.placeholder.com/150'}
-                      alt={product.name}
-                      className="w-28 h-36 object-cover grayscale-image"
-                    />
-                  </Link>
+                  <div className="relative">
+                    <Link to={`/product/${product.id}`}>
+                      <img
+                        src={getImageUrl(product.images?.[0]) || 'https://via.placeholder.com/150'}
+                        alt={product.name}
+                        className={`w-28 h-36 object-cover grayscale-image ${isOutOfStock ? 'opacity-50' : ''}`}
+                      />
+                    </Link>
+                    {isOutOfStock && (
+                      <span
+                        className="absolute top-2 left-2 bg-red-600 text-white text-xs font-bold px-2 py-1 mono-font"
+                        data-testid={`out-of-stock-badge-${idx}`}
+                      >
+                        Out of Stock
+                      </span>
+                    )}
+                  </div>
 
                   {/* Product Details */}
                   <div className="flex-1">
@@ -183,6 +235,7 @@ const CartPage = () => {
                         variant="outline"
                         className="h-8 w-8 rounded-none"
                         onClick={() => updateQuantity(item, item.quantity + 1)}
+                        disabled={isOutOfStock || isAtMaxQuantity}
                         data-testid={`cart-increase-${idx}`}
                       >
                         <Plus className="h-4 w-4" />
@@ -242,6 +295,19 @@ const CartPage = () => {
                   <span className="mono-font text-xl font-bold">₹{getTotal().toFixed(2)}</span>
                 </div>
               </div>
+
+              {/* Warning when out-of-stock items are in cart */}
+              {hasOutOfStockItems && (
+                <div
+                  className="flex items-center gap-2 bg-amber-50 border border-amber-200 p-3 mb-4"
+                  data-testid="out-of-stock-warning"
+                >
+                  <AlertTriangle className="h-4 w-4 text-amber-600 flex-shrink-0" />
+                  <p className="mono-font text-xs text-amber-700">
+                    Some items in your cart are out of stock and may be unavailable.
+                  </p>
+                </div>
+              )}
 
               <Button
                 className="w-full rounded-none bg-black text-white hover:bg-zinc-800 btn-noir"
