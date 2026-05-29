@@ -14,6 +14,26 @@ DROP TABLE IF EXISTS product_sizes CASCADE;
 DROP TABLE IF EXISTS product_colors CASCADE;
 DROP TABLE IF EXISTS products CASCADE;
 DROP TABLE IF EXISTS categories CASCADE;
+DROP TABLE IF EXISTS site_settings CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+
+-- Drop existing types
+DROP TYPE IF EXISTS order_status CASCADE;
+
+-- ============================================================
+-- USERS
+-- ============================================================
+CREATE TABLE users (
+    id VARCHAR(255) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255),
+    phone VARCHAR(20),
+    dob VARCHAR(20),
+    auth_provider VARCHAR(50) DEFAULT 'email',
+    is_admin BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
 
 -- ============================================================
 -- CATEGORIES
@@ -219,11 +239,11 @@ CREATE TRIGGER update_orders_updated_at
 -- ============================================================
 -- SEED: Default categories
 -- ============================================================
-INSERT INTO categories (name, slug) VALUES
-    ('T-Shirt', 't-shirt'),
-    ('Hoodie', 'hoodie'),
-    ('Jacket', 'jacket'),
-    ('Pants', 'pants'),
-    ('Shirt', 'shirt'),
-    ('Sweater', 'sweater')
+INSERT INTO categories (id, name, slug) VALUES
+    (gen_random_uuid()::text, 'T-Shirt', 't-shirt'),
+    (gen_random_uuid()::text, 'Hoodie', 'hoodie'),
+    (gen_random_uuid()::text, 'Jacket', 'jacket'),
+    (gen_random_uuid()::text, 'Pants', 'pants'),
+    (gen_random_uuid()::text, 'Shirt', 'shirt'),
+    (gen_random_uuid()::text, 'Sweater', 'sweater')
 ON CONFLICT (name) DO NOTHING;
