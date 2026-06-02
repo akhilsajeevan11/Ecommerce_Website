@@ -325,7 +325,7 @@ const PincodeManager = ({ token }) => {
     } finally {
       setLoadingList(false);
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); // The empty deps array is intentional — fetchPincodes only reads token via headers closure
 
   useEffect(() => { fetchPincodes(); }, [fetchPincodes]);
 
