@@ -4,12 +4,16 @@ import os
 
 from routes.auth import router as auth_router
 from routes.products import router as products_router
+from routes.categories import router as categories_router
 from routes.cart import router as cart_router
 from routes.wishlist import router as wishlist_router
 from routes.orders import router as orders_router
 from routes.reviews import router as reviews_router
 from routes.payments import router as payments_router
 from routes.admin import router as admin_router
+from routes.health import router as health_router
+from routes.delivery import router as delivery_router
+from routes.addresses import router as addresses_router
 
 app = FastAPI()
 
@@ -40,8 +44,12 @@ async def root():
 
 
 # Mount routers
+app.include_router(health_router)
+app.include_router(delivery_router)
+app.include_router(addresses_router)
 app.include_router(auth_router)
 app.include_router(products_router)
+app.include_router(categories_router)
 app.include_router(cart_router)
 app.include_router(wishlist_router)
 app.include_router(orders_router)

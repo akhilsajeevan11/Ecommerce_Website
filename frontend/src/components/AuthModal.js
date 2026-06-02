@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
+import * as Dialog from '@radix-ui/react-dialog';
 import { useAuth } from '../context/AppContext';
-import { toast } from 'sonner';
+import { noirToast as toast } from '../lib/noir-toast';
 import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -109,6 +110,130 @@ const OtpInput = ({ value, onChange }) => {
   );
 };
 
+/* ── Forgot Password Dialog ───────────────────────────── */
+const ForgotPasswordDialog = ({ open, onOpenChange }) => {
+  const [email, setEmail] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleClose = () => {
+    onOpenChange(false);
+    // Reset state after close animation
+    setTimeout(() => {
+      setEmail('');
+      setEmailError('');
+      setSubmitted(false);
+    }, 200);
+  };
+
+  const handleSend = () => {
+    if (!email.trim()) {
+      setEmailError('Please enter your email address');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      setEmailError('Please enter a valid email address');
+      return;
+    }
+    setEmailError('');
+    // UI only — no backend call in this spec
+    setSubmitted(true);
+  };
+
+  return (
+    <Dialog.Root open={open} onOpenChange={onOpenChange}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 z-[110] bg-black/40 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+        <Dialog.Content
+          className="fixed left-1/2 top-1/2 z-[111] w-full max-w-md -translate-x-1/2 -translate-y-1/2 bg-white p-10 shadow-2xl focus:outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
+          aria-describedby="forgot-password-desc"
+        >
+          {/* Close button */}
+          <Dialog.Close
+            className="absolute right-5 top-5 p-1 text-zinc-400 hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label="Close"
+          >
+            <X className="w-5 h-5" />
+          </Dialog.Close>
+
+          {submitted ? (
+            /* ── Success state ── */
+            <div className="text-center">
+              <Dialog.Title className="font-heading text-3xl font-bold tracking-tight mb-3">
+                Check your inbox
+              </Dialog.Title>
+              <p id="forgot-password-desc" className="font-body text-sm text-muted-foreground mb-8">
+                We've sent a password reset link to{' '}
+                <span className="font-semibold text-foreground">{email}</span>
+              </p>
+              <button
+                onClick={handleClose}
+                className="w-full h-12 bg-foreground text-background font-mono text-xs uppercase tracking-widest hover:bg-zinc-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                Back to login
+              </button>
+            </div>
+          ) : (
+            /* ── Email input state ── */
+            <>
+              <Dialog.Title className="font-heading text-3xl font-bold tracking-tight text-center mb-2">
+                Reset your password
+              </Dialog.Title>
+              <p id="forgot-password-desc" className="font-body text-sm text-muted-foreground text-center mb-8">
+                Enter your email and we'll send you a reset link.
+              </p>
+
+              <div className="flex flex-col gap-2 mb-6">
+                <label
+                  htmlFor="reset-email"
+                  className="font-mono text-[10px] font-semibold uppercase tracking-widest text-foreground"
+                >
+                  Email address
+                </label>
+                <input
+                  id="reset-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (emailError) setEmailError('');
+                  }}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleSend(); }}
+                  placeholder="you@example.com"
+                  autoComplete="email"
+                  aria-invalid={emailError ? 'true' : 'false'}
+                  aria-describedby={emailError ? 'reset-email-err' : undefined}
+                  className="w-full border-b-2 border-zinc-200 bg-transparent py-2 font-body text-sm text-foreground outline-none transition-colors focus:border-foreground placeholder:text-muted-foreground"
+                />
+                {emailError && (
+                  <p id="reset-email-err" className="font-mono text-[10px] text-destructive" role="alert">
+                    {emailError}
+                  </p>
+                )}
+              </div>
+
+              <button
+                onClick={handleSend}
+                className="w-full h-12 bg-foreground text-background font-mono text-xs uppercase tracking-widest hover:bg-zinc-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                Send reset link
+              </button>
+
+              <div className="mt-4 text-center">
+                <Dialog.Close
+                  className="font-body text-xs text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  Back to login
+                </Dialog.Close>
+              </div>
+            </>
+          )}
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
+  );
+};
+
 /* ── Main AuthModal ───────────────────────────────────── */
 const AuthModal = ({ open, onClose, mode, onModeChange }) => {
   const { login, sendOtp, verifyOtpAndRegister } = useAuth();
@@ -127,6 +252,9 @@ const AuthModal = ({ open, onClose, mode, onModeChange }) => {
   const [otp, setOtp] = useState('');
   const [otpError, setOtpError] = useState('');
   const [otpEmail, setOtpEmail] = useState('');
+
+  // Forgot password dialog
+  const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
 
   const clearForm = () => {
     setIdentifier(''); setEmail(''); setPassword(''); setConfirmPassword('');
@@ -166,11 +294,11 @@ const AuthModal = ({ open, onClose, mode, onModeChange }) => {
       try {
         console.log('[Auth] Login attempt:', identifier);
         await login(identifier, password);
-        toast.success('Welcome back!');
+        toast.auth('Welcome back!', identifier);
         onClose(); clearForm();
       } catch (error) {
         console.error('[Auth] Login error:', error.response?.data?.detail || error.message);
-        toast.error(error.response?.data?.detail || 'Login failed');
+        toast.authError(error.response?.data?.detail || 'Login failed');
       } finally { setLoading(false); }
     } else {
       // Registration — Step 1: validate + send OTP
@@ -182,10 +310,10 @@ const AuthModal = ({ open, onClose, mode, onModeChange }) => {
         await sendOtp(email, password, name, phone, dob);
         setOtpEmail(email);
         setOtpStep(true);
-        toast.success('Verification code sent to your email');
+        toast.otp('Check your inbox', 'Verification code sent to your email');
       } catch (error) {
         console.error('[Auth] Send OTP error:', error.response?.data?.detail || error.message);
-        toast.error(error.response?.data?.detail || 'Failed to send verification code');
+        toast.authError(error.response?.data?.detail || 'Failed to send verification code');
       } finally { setLoading(false); }
     }
   };
@@ -197,7 +325,7 @@ const AuthModal = ({ open, onClose, mode, onModeChange }) => {
     try {
       console.log('[Auth] Verifying OTP for:', otpEmail);
       await verifyOtpAndRegister(otpEmail, otp);
-      toast.success('Account created! Please login to continue.');
+      toast.auth('Account created', 'Please log in to continue.');
       clearForm();
       onModeChange('login');
     } catch (error) {
@@ -212,7 +340,7 @@ const AuthModal = ({ open, onClose, mode, onModeChange }) => {
     try {
       await sendOtp(email, password, name, phone, dob);
       setOtp('');
-      toast.success('New verification code sent');
+      toast.otp('New code sent', 'Check your inbox again');
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to resend code');
     } finally { setLoading(false); }
@@ -312,6 +440,15 @@ const AuthModal = ({ open, onClose, mode, onModeChange }) => {
                     <Field label="Password" error={errors.password}>
                       <input type="password" value={password} onChange={(e) => { setPassword(e.target.value); clearError('password'); }}
                         style={baseInputStyle} onFocus={focusHandler} onBlur={blurHandler} />
+                      <div style={{ textAlign: 'right', marginTop: '4px' }}>
+                        <button
+                          type="button"
+                          onClick={() => setForgotPasswordOpen(true)}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'Manrope', sans-serif", fontSize: '11px', color: '#71717a', textDecoration: 'underline', padding: 0 }}
+                        >
+                          Forgot password?
+                        </button>
+                      </div>
                     </Field>
                   </>
                 )}
@@ -362,6 +499,7 @@ const AuthModal = ({ open, onClose, mode, onModeChange }) => {
           )}
         </motion.div>
       </div>
+      <ForgotPasswordDialog open={forgotPasswordOpen} onOpenChange={setForgotPasswordOpen} />
     </AnimatePresence>
   );
 };

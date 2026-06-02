@@ -3,7 +3,7 @@ import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { BarChart3, Package, Plus, ClipboardList, AlertTriangle, Settings } from 'lucide-react';
 import { useAuth } from '../../context/AppContext';
 import { isAdminSubdomain } from '../../utils/subdomain';
-import { toast } from 'sonner';
+import { noirToast as toast } from '../../lib/noir-toast';
 
 // Paths differ based on whether we're on admin subdomain or customer site
 const getNavLinks = () => {
@@ -35,49 +35,31 @@ const AdminLayout = () => {
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
+    <div className="flex min-h-screen">
       {/* Sidebar */}
-      <nav style={{
-        width: 240,
-        minWidth: 240,
-        backgroundColor: '#000',
-        color: '#fff',
-        display: 'flex',
-        flexDirection: 'column',
-        padding: '2rem 0',
-      }}>
-        <div className="heading-font" style={{
-          fontSize: '1.25rem',
-          fontWeight: 700,
-          letterSpacing: '0.05em',
-          padding: '0 1.5rem',
-          marginBottom: '2rem',
-        }}>
-          NOIR ADMIN
+      <nav className="w-14 lg:w-60 min-w-[3.5rem] lg:min-w-[15rem] bg-black text-white flex flex-col shrink-0 transition-all duration-200">
+        {/* Brand */}
+        <div className="font-heading text-base lg:text-lg font-bold tracking-[0.05em] px-3 lg:px-6 py-6 lg:py-8 border-b border-zinc-800 overflow-hidden">
+          <span className="hidden lg:inline">NOIR ADMIN</span>
+          <span className="lg:hidden text-sm">NA</span>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+        <div className="flex flex-col gap-0.5 py-4 flex-1">
           {getNavLinks().map(({ label, path, icon: Icon }) => {
-            const isActive = location.pathname === path;
+            const isActive = location.pathname === path || location.pathname.startsWith(path + '/');
             return (
               <Link
                 key={path}
                 to={path}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem',
-                  padding: '0.625rem 1.5rem',
-                  textDecoration: 'none',
-                  fontSize: '0.875rem',
-                  fontWeight: 500,
-                  backgroundColor: isActive ? '#fff' : 'transparent',
-                  color: isActive ? '#000' : '#a1a1aa',
-                  transition: 'background-color 0.15s, color 0.15s',
-                }}
+                title={label}
+                className={`flex items-center gap-3 px-3 lg:px-6 py-3 text-sm font-medium transition-colors no-underline ${
+                  isActive
+                    ? 'bg-white text-black'
+                    : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
+                }`}
               >
-                <Icon size={18} />
-                {label}
+                <Icon size={18} className="shrink-0" />
+                <span className="hidden lg:inline truncate">{label}</span>
               </Link>
             );
           })}
@@ -85,7 +67,7 @@ const AdminLayout = () => {
       </nav>
 
       {/* Main content */}
-      <main style={{ flex: 1, overflowY: 'auto', backgroundColor: '#fff' }}>
+      <main className="flex-1 overflow-y-auto bg-white min-w-0">
         <Outlet />
       </main>
     </div>

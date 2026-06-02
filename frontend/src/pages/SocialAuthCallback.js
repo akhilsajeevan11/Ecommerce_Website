@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AppContext';
-import { toast } from 'sonner';
+import { noirToast as toast } from '../lib/noir-toast';
 
 const SocialAuthCallback = () => {
   const [searchParams] = useSearchParams();
@@ -13,14 +13,14 @@ const SocialAuthCallback = () => {
     const error = searchParams.get('error');
 
     if (error) {
-      toast.error('Social login failed. Please try again.');
+      toast.authError('Social login failed', 'Please try again.');
       navigate('/');
       return;
     }
 
     if (token) {
       socialLogin(token);
-      toast.success('Welcome!');
+      toast.auth('Welcome back');
       navigate('/');
     } else {
       navigate('/');
