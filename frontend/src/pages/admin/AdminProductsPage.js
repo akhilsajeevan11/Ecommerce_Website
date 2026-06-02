@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { Pencil, Trash2, Check, X, ImageIcon, Loader2, Upload, Star } from 'lucide-react';
-import { toast } from 'sonner';
+import { noirToast as toast } from '../../lib/noir-toast';
 import { useAuth } from '../../context/AppContext';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -21,18 +21,6 @@ export const validateImageFile = (file) => {
   return { valid: true, error: null };
 };
 
-const thStyle = {
-  padding: '0.75rem 1rem',
-  fontSize: '0.75rem',
-  textTransform: 'uppercase',
-  letterSpacing: '0.05em',
-  color: '#71717a',
-  fontFamily: 'JetBrains Mono, monospace',
-  textAlign: 'left',
-};
-
-const tdStyle = { padding: '0.75rem 1rem', fontSize: '0.875rem' };
-
 const AdminProductsPage = () => {
   const { token } = useAuth();
   const [products, setProducts] = useState([]);
@@ -48,15 +36,6 @@ const AdminProductsPage = () => {
   const [imageError, setImageError] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const mql = window.matchMedia('(max-width: 767px)');
-    setIsMobile(mql.matches);
-    const handler = (e) => setIsMobile(e.matches);
-    mql.addEventListener('change', handler);
-    return () => mql.removeEventListener('change', handler);
-  }, []);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -65,8 +44,13 @@ const AdminProductsPage = () => {
         setError(null);
         const response = await axios.get(`${API}/products`, {
           headers: { Authorization: `Bearer ${token}` },
+          // Fetch up to 60 products per page for the admin table.
+          // The storefront API now returns an envelope { items, total, page, limit, has_more }
+          // so we extract .items; fall back to the raw array for backwards compat.
+          params: { limit: 60 },
         });
-        setProducts(response.data);
+        const data = response.data;
+        setProducts(Array.isArray(data) ? data : (data.items ?? []));
       } catch (err) {
         const errorMessage = err.response?.data?.detail || err.message || 'Failed to load products';
         setError(errorMessage);
@@ -93,7 +77,7 @@ const AdminProductsPage = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       setProducts((prev) => prev.filter((p) => p.id !== id));
-      toast.success('Product deleted', { duration: 5000 });
+      toast.success('Product deleted');
     } catch (err) {
       if (err.response?.status === 404) {
         toast.error('Product not found — it may have already been deleted');
@@ -123,7 +107,7 @@ const AdminProductsPage = () => {
         { is_featured: newValue },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      toast.success(`Product ${newValue ? 'marked as featured' : 'removed from featured'}`);
+      toast.featured(`Product ${newValue ? 'marked as featured' : 'removed from featured'}`);
     } catch (err) {
       // Revert UI state on failure
       setProducts((prev) =>
@@ -302,61 +286,49 @@ const AdminProductsPage = () => {
     setEditForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const inputStyle = {
-    width: '100%',
-    padding: '0.375rem 0.5rem',
-    fontSize: '0.875rem',
-    border: '1px solid #d4d4d8',
-    outline: 'none',
-    fontFamily: 'JetBrains Mono, monospace',
-  };
-
   if (loading) {
     return (
-      <div style={{ padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '200px' }}>
-        <div style={{
-          width: '2rem',
-          height: '2rem',
-          border: '2px solid #e4e4e7',
-          borderTop: '2px solid #000',
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite',
-        }} />
-        <p className="mono-font" style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#71717a' }}>Loading products...</p>
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <div className="flex flex-col items-center justify-center min-h-[300px] gap-4">
+        <Loader2 className="h-8 w-8 animate-spin text-zinc-400" />
+        <p className="font-mono text-sm text-zinc-500">Loading products...</p>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <h1 className="heading-font" style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1.5rem', color: '#000' }}>
-        Products
-      </h1>
+    <div className="p-6 lg:p-8">
+      {/* Page header */}
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="font-heading text-3xl font-bold tracking-tight">Products</h1>
+        <span className="font-mono text-xs text-zinc-500 uppercase tracking-widest">
+          {products.length} product{products.length !== 1 ? 's' : ''}
+        </span>
+      </div>
 
       {error && (
-        <div className="mono-font" style={{ padding: '1rem', marginBottom: '1rem', backgroundColor: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', fontSize: '0.875rem' }}>
+        <div className="font-mono mb-4 px-4 py-3 bg-red-50 border border-red-200 text-red-700 text-sm">
           Failed to load products: {error}
         </div>
       )}
 
-      <div style={{ border: '1px solid #e4e4e7', overflowX: 'auto' }}>
-        <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
+      {/* Table */}
+      <div className="border border-zinc-200 overflow-x-auto">
+        <table className="w-full text-left border-collapse text-sm">
           <thead>
-            <tr style={{ borderBottom: '1px solid #e4e4e7', backgroundColor: '#fafafa' }}>
-              {!isMobile && <th style={thStyle}>Image</th>}
-              <th style={{ ...thStyle, minWidth: '120px' }}>Name</th>
-              {!isMobile && <th style={thStyle}>Category</th>}
-              <th style={thStyle}>Stock</th>
-              <th style={thStyle}>Price</th>
-              <th style={thStyle}>Featured</th>
-              <th style={thStyle}>Actions</th>
+            <tr className="border-b border-zinc-200 bg-zinc-50">
+              <th className="hidden md:table-cell font-mono px-4 py-3 text-xs uppercase tracking-widest text-zinc-500">Image</th>
+              <th className="font-mono px-4 py-3 text-xs uppercase tracking-widest text-zinc-500 min-w-[140px]">Name</th>
+              <th className="hidden lg:table-cell font-mono px-4 py-3 text-xs uppercase tracking-widest text-zinc-500">Category</th>
+              <th className="font-mono px-4 py-3 text-xs uppercase tracking-widest text-zinc-500">Stock</th>
+              <th className="font-mono px-4 py-3 text-xs uppercase tracking-widest text-zinc-500">Price</th>
+              <th className="font-mono px-4 py-3 text-xs uppercase tracking-widest text-zinc-500">Featured</th>
+              <th className="font-mono px-4 py-3 text-xs uppercase tracking-widest text-zinc-500">Actions</th>
             </tr>
           </thead>
           <tbody>
             {products.length === 0 ? (
               <tr>
-                <td colSpan={isMobile ? 5 : 7} className="mono-font" style={{ ...tdStyle, textAlign: 'center', padding: '2rem 1rem', color: '#a1a1aa' }}>
+                <td colSpan={7} className="font-mono text-center py-12 text-zinc-400 text-sm">
                   No products found
                 </td>
               </tr>
@@ -364,88 +336,87 @@ const AdminProductsPage = () => {
               products.map((product) => {
                 const isEditing = editingId === product.id;
                 return (
-                  <tr key={product.id} style={{ borderBottom: '1px solid #f4f4f5' }}>
-                    {!isMobile && (
-                    <td style={tdStyle}>
+                  <tr key={product.id} className="border-b border-zinc-100 hover:bg-zinc-50 transition-colors">
+                    {/* Image */}
+                    <td className="hidden md:table-cell px-4 py-3">
                       {isEditing ? (
-                        <div style={{ position: 'relative', width: '48px', height: '48px' }}>
-                          {/* Show preview or existing image */}
+                        <div className="relative w-12 h-12">
                           {imagePreview ? (
-                            <img
-                              src={imagePreview}
-                              alt="Preview"
-                              style={{ width: '48px', height: '48px', objectFit: 'cover', display: 'block', opacity: 0.8 }}
-                            />
-                          ) : product.images && product.images.length > 0 && !imgErrors[product.id] ? (
+                            <img src={imagePreview} alt="Preview" className="w-12 h-12 object-cover opacity-80" />
+                          ) : product.images?.[0] && !imgErrors[product.id] ? (
                             <img
                               src={product.images[0]}
                               alt={product.name}
-                              style={{ width: '48px', height: '48px', objectFit: 'cover', display: 'block', opacity: 0.8 }}
+                              className="w-12 h-12 object-cover opacity-80"
                               onError={() => setImgErrors((prev) => ({ ...prev, [product.id]: true }))}
                             />
                           ) : (
-                            <ImageIcon size={48} color="#a1a1aa" aria-label={`No image for ${product.name}`} />
+                            <ImageIcon className="w-12 h-12 text-zinc-300" />
                           )}
-                          {/* File input overlay button */}
                           <button
                             type="button"
                             onClick={() => fileInputRef.current?.click()}
                             disabled={submitting}
-                            style={{
-                              position: 'absolute',
-                              inset: 0,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              background: 'rgba(0,0,0,0.4)',
-                              border: 'none',
-                              cursor: submitting ? 'not-allowed' : 'pointer',
-                              borderRadius: '4px',
-                            }}
+                            className="absolute inset-0 flex items-center justify-center bg-black/40 hover:bg-black/60 transition-colors disabled:cursor-not-allowed"
                             aria-label="Upload new image"
                           >
-                            <Upload size={16} color="#fff" />
+                            <Upload className="w-4 h-4 text-white" />
                           </button>
                           <input
                             ref={fileInputRef}
                             type="file"
                             accept="image/jpeg,image/png,image/webp"
-                            style={{ display: 'none' }}
+                            className="hidden"
                             onChange={handleImageSelect}
                             disabled={submitting}
                           />
                           {imageError && (
-                            <span style={{ position: 'absolute', top: '52px', left: 0, fontSize: '0.65rem', color: '#dc2626', whiteSpace: 'nowrap' }}>
+                            <span className="absolute top-14 left-0 font-mono text-[10px] text-red-600 whitespace-nowrap">
                               {imageError}
                             </span>
                           )}
                         </div>
                       ) : (
-                        product.images && product.images.length > 0 && !imgErrors[product.id] ? (
+                        product.images?.[0] && !imgErrors[product.id] ? (
                           <img
                             src={product.images[0]}
                             alt={product.name}
-                            style={{ width: '48px', height: '48px', objectFit: 'cover', display: 'block' }}
+                            className="w-12 h-12 object-cover"
                             onError={() => setImgErrors((prev) => ({ ...prev, [product.id]: true }))}
                           />
                         ) : (
-                          <ImageIcon size={48} color="#a1a1aa" aria-label={`No image for ${product.name}`} />
+                          <ImageIcon className="w-12 h-12 text-zinc-300" aria-label={`No image for ${product.name}`} />
                         )
                       )}
                     </td>
-                    )}
-                    <td style={{ ...tdStyle, fontWeight: 500, minWidth: '120px' }}>
+
+                    {/* Name */}
+                    <td className="px-4 py-3 font-medium min-w-[140px]">
                       {isEditing ? (
-                        <div>
-                          <input style={{ ...inputStyle, borderColor: editErrors.name ? '#dc2626' : '#d4d4d8' }} value={editForm.name} onChange={(e) => handleEditChange('name', e.target.value)} disabled={submitting} maxLength={255} />
-                          {editErrors.name && <span style={{ fontSize: '0.75rem', color: '#dc2626' }}>{editErrors.name}</span>}
+                        <div className="flex flex-col gap-1">
+                          <input
+                            className={`w-full px-2 py-1.5 text-sm border font-mono outline-none focus:border-black ${editErrors.name ? 'border-red-400' : 'border-zinc-300'}`}
+                            value={editForm.name}
+                            onChange={(e) => handleEditChange('name', e.target.value)}
+                            disabled={submitting}
+                            maxLength={255}
+                          />
+                          {editErrors.name && <span className="font-mono text-xs text-red-600">{editErrors.name}</span>}
                         </div>
-                      ) : product.name}
+                      ) : (
+                        <span className="line-clamp-2">{product.name}</span>
+                      )}
                     </td>
-                    {!isMobile && (
-                    <td className="mono-font" style={{ ...tdStyle, color: '#52525b' }}>
+
+                    {/* Category */}
+                    <td className="hidden lg:table-cell px-4 py-3 font-mono text-zinc-500">
                       {isEditing ? (
-                        <select style={inputStyle} value={editForm.category} onChange={(e) => handleEditChange('category', e.target.value)} disabled={submitting}>
+                        <select
+                          className="w-full px-2 py-1.5 text-sm border border-zinc-300 font-mono outline-none focus:border-black bg-white"
+                          value={editForm.category}
+                          onChange={(e) => handleEditChange('category', e.target.value)}
+                          disabled={submitting}
+                        >
                           <option value="">Select category</option>
                           {['T-Shirt', 'Hoodie', 'Jacket', 'Pants', 'Shirt', 'Sweater'].map((cat) => (
                             <option key={cat} value={cat}>{cat}</option>
@@ -453,73 +424,104 @@ const AdminProductsPage = () => {
                         </select>
                       ) : product.category}
                     </td>
-                    )}
-                    <td className="mono-font" style={tdStyle}>
+
+                    {/* Stock */}
+                    <td className="px-4 py-3 font-mono">
                       {isEditing ? (
-                        <div>
-                          <input style={{ ...inputStyle, borderColor: editErrors.stock ? '#dc2626' : '#d4d4d8' }} type="number" value={editForm.stock} onChange={(e) => handleEditChange('stock', e.target.value)} disabled={submitting} />
-                          {editErrors.stock && <span style={{ fontSize: '0.75rem', color: '#dc2626' }}>{editErrors.stock}</span>}
+                        <div className="flex flex-col gap-1">
+                          <input
+                            className={`w-20 px-2 py-1.5 text-sm border font-mono outline-none focus:border-black ${editErrors.stock ? 'border-red-400' : 'border-zinc-300'}`}
+                            type="number"
+                            value={editForm.stock}
+                            onChange={(e) => handleEditChange('stock', e.target.value)}
+                            disabled={submitting}
+                          />
+                          {editErrors.stock && <span className="font-mono text-xs text-red-600">{editErrors.stock}</span>}
                         </div>
-                      ) : product.stock}
+                      ) : (
+                        <span className={product.stock === 0 ? 'text-red-500' : product.stock <= 5 ? 'text-amber-500' : 'text-zinc-700'}>
+                          {product.stock}
+                        </span>
+                      )}
                     </td>
-                    <td className="mono-font" style={tdStyle}>
+
+                    {/* Price */}
+                    <td className="px-4 py-3 font-mono">
                       {isEditing ? (
-                        <div>
-                          <input style={{ ...inputStyle, borderColor: editErrors.price ? '#dc2626' : '#d4d4d8' }} type="number" step="0.01" value={editForm.price} onChange={(e) => handleEditChange('price', e.target.value)} disabled={submitting} />
-                          {editErrors.price && <span style={{ fontSize: '0.75rem', color: '#dc2626' }}>{editErrors.price}</span>}
+                        <div className="flex flex-col gap-1">
+                          <input
+                            className={`w-24 px-2 py-1.5 text-sm border font-mono outline-none focus:border-black ${editErrors.price ? 'border-red-400' : 'border-zinc-300'}`}
+                            type="number"
+                            step="0.01"
+                            value={editForm.price}
+                            onChange={(e) => handleEditChange('price', e.target.value)}
+                            disabled={submitting}
+                          />
+                          {editErrors.price && <span className="font-mono text-xs text-red-600">{editErrors.price}</span>}
                         </div>
-                      ) : `₹${product.price.toFixed(2)}`}
+                      ) : `₹${Number(product.price).toFixed(2)}`}
                     </td>
-                    <td style={tdStyle}>
+
+                    {/* Featured toggle */}
+                    <td className="px-4 py-3">
                       <button
                         onClick={() => handleToggleFeatured(product)}
                         disabled={togglingFeaturedId === product.id}
-                        style={{
-                          background: 'none',
-                          border: 'none',
-                          cursor: togglingFeaturedId === product.id ? 'not-allowed' : 'pointer',
-                          padding: '0.25rem',
-                          opacity: togglingFeaturedId === product.id ? 0.5 : 1,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          ...(isMobile ? { minWidth: '44px', minHeight: '44px' } : {}),
-                        }}
+                        className="inline-flex items-center justify-center w-10 h-10 hover:bg-zinc-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         aria-label={product.is_featured ? 'Remove from featured' : 'Mark as featured'}
                       >
                         {togglingFeaturedId === product.id ? (
-                          <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} color="#71717a" />
+                          <Loader2 className="w-4 h-4 animate-spin text-zinc-400" />
                         ) : (
                           <Star
-                            size={18}
+                            className="w-4 h-4"
                             fill={product.is_featured ? '#f59e0b' : 'none'}
                             color={product.is_featured ? '#f59e0b' : '#a1a1aa'}
                           />
                         )}
                       </button>
                     </td>
-                    <td style={tdStyle}>
+
+                    {/* Actions */}
+                    <td className="px-4 py-3">
                       {isEditing ? (
-                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                          <button onClick={() => handleEditSave(product.id)} disabled={submitting || !!imageError} style={{ background: 'none', border: 'none', cursor: (submitting || !!imageError) ? 'not-allowed' : 'pointer', color: '#16a34a', padding: '0.25rem', opacity: (submitting || !!imageError) ? 0.5 : 1, ...(isMobile ? { minWidth: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' } : {}) }} aria-label="Save">
-                            {submitting ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Check size={16} />}
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleEditSave(product.id)}
+                            disabled={submitting || !!imageError}
+                            className="inline-flex items-center justify-center w-9 h-9 text-green-600 hover:bg-green-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                            aria-label="Save"
+                          >
+                            {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                           </button>
-                          <button onClick={handleEditCancel} disabled={submitting} style={{ background: 'none', border: 'none', cursor: submitting ? 'not-allowed' : 'pointer', color: '#dc2626', padding: '0.25rem', opacity: submitting ? 0.5 : 1, ...(isMobile ? { minWidth: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' } : {}) }} aria-label="Cancel">
-                            <X size={16} />
+                          <button
+                            onClick={handleEditCancel}
+                            disabled={submitting}
+                            className="inline-flex items-center justify-center w-9 h-9 text-red-600 hover:bg-red-50 transition-colors disabled:opacity-40"
+                            aria-label="Cancel"
+                          >
+                            <X className="w-4 h-4" />
                           </button>
                         </div>
                       ) : (
-                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                          <button onClick={() => handleEditStart(product)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#71717a', padding: '0.25rem', ...(isMobile ? { minWidth: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' } : {}) }} aria-label="Edit">
-                            <Pencil size={16} />
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleEditStart(product)}
+                            className="inline-flex items-center justify-center w-9 h-9 text-zinc-500 hover:text-black hover:bg-zinc-100 transition-colors"
+                            aria-label="Edit"
+                          >
+                            <Pencil className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleDelete(product.id)}
                             disabled={deletingId === product.id}
-                            style={{ background: 'none', border: 'none', cursor: deletingId === product.id ? 'not-allowed' : 'pointer', color: '#71717a', padding: '0.25rem', opacity: deletingId === product.id ? 0.5 : 1, ...(isMobile ? { minWidth: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' } : {}) }}
+                            className="inline-flex items-center justify-center w-9 h-9 text-zinc-500 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                             aria-label="Delete"
                           >
-                            {deletingId === product.id ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Trash2 size={16} />}
+                            {deletingId === product.id
+                              ? <Loader2 className="w-4 h-4 animate-spin" />
+                              : <Trash2 className="w-4 h-4" />
+                            }
                           </button>
                         </div>
                       )}

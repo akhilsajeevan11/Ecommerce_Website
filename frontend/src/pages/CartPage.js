@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { useCart, useAuth } from '../context/AppContext';
 import { Minus, Plus, X, ShoppingBag, ArrowRight, AlertTriangle } from 'lucide-react';
-import { toast } from 'sonner';
+import { noirToast } from '../lib/noir-toast';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import { getImageUrl } from '../utils/getImageUrl';
@@ -81,7 +81,7 @@ const CartPage = () => {
   const handleRemove = async (item) => {
     try {
       await removeFromCart(item.product_id, item.size, item.color);
-      toast.success('Item removed from cart');
+      toast.cartRemove('Removed from cart');
     } catch (error) {
       toast.error('Failed to remove item. Please try again.');
     }

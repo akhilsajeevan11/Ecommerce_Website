@@ -6,7 +6,33 @@
         <meta name="theme-color" content="#000000" />
         <meta name="description" content="NOIR - Monochrome Luxury Fashion" />
         <title>NOIR - Monochrome Luxury Fashion</title>
-        <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+        <!-- CDN preconnect for media assets -->
+        <link rel="preconnect" href="https://media.aksou.in" />
+        <link rel="dns-prefetch" href="https://media.aksou.in" />
+
+        <!-- Google Fonts preconnect -->
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+        <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+
+        <!-- Preload Bodoni Moda (heading font) — woff2 for modern browsers -->
+        <link
+            rel="preload"
+            href="https://fonts.gstatic.com/s/bodonimoda/v22/aFT67PxzY382XsXX63LUYL6GYFcan6NJrKp-VPjfJpSh34tFyd9Ng3uvF0Eh.woff2"
+            as="font"
+            type="font/woff2"
+            crossorigin
+        />
+
+        <!-- Preload hero image to improve LCP.
+             fetchpriority="high" tells the browser to start this fetch with
+             high priority as soon as the HTML parser sees this hint.
+             This is the LCP element on the Home page (Requirement 14.1). -->
+        <link rel="preload" href="/hero-placeholder.jpg" as="image" fetchpriority="high" />
+
+        <script src="https://checkout.razorpay.com/v1/checkout.js" defer></script>
     </head>
     <body>
         <noscript>You need to enable JavaScript to run this app.</noscript>

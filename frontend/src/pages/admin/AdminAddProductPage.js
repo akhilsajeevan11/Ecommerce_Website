@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
+import { noirToast as toast } from '../../lib/noir-toast';
 import { Upload, X, ImageIcon, Film, Loader } from 'lucide-react';
 import { validateProductForm } from '../../utils/validateProductForm';
 import { isAdminSubdomain } from '../../utils/subdomain';

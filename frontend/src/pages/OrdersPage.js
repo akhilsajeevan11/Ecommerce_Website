@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { useAuth } from '../context/AppContext';
-import { toast } from 'sonner';
+import { noirToast as toast } from '../lib/noir-toast';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Package, ChevronDown, ChevronUp, ShoppingBag } from 'lucide-react';

@@ -43,6 +43,9 @@ backend/backend/uploads/
 backend/tests/
 frontend/src/__tests__/
 
+# Lighthouse CI output
+.lighthouseci/
+
 # Archives / Backups
 *.zip
 Jaggu_website_*.zip

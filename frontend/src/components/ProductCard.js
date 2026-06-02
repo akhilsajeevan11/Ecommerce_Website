@@ -2,19 +2,41 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, ShoppingCart } from 'lucide-react';
 import { useAuth, useCart, useWishlist, useAuthModal } from '../context/AppContext';
-import { toast } from 'sonner';
-import { getImageUrl } from '../utils/getImageUrl';
+import { noirToast as toast } from '../lib/noir-toast';
+import Image from './primitives/Image';
+import Badge from './primitives/Badge';
+import ColorSwatch from './common/ColorSwatch';
+import { formatPrice } from '../lib/formatters';
+import { cn } from '../lib/utils';
 
+/**
+ * ProductCard — Tailwind-only rewrite.
+ *
+ * Requirements satisfied:
+ *   9.1 — Zero inline `style={` attributes (Image primitive is the sole exception
+ *          for its internal aspectRatio/placeholder background).
+ *   9.2 — Uses <Image> primitive for the product image.
+ *   9.3 — Grayscale applied only at lg+ via `lg:grayscale lg:hover:grayscale-0`;
+ *          never on touch/mobile viewports.
+ *   9.4 — Renders a ColorSwatch row from `product.colors`.
+ *   9.5 — Renders a Quick-Add button that appears on hover and calls addToCart.
+ *   9.6 — Renders Badge variants: Featured, Out of Stock, Sale.
+ *   9.7 — Wishlist toggle button has an `aria-label`.
+ *
+ * Source spec:
+ *   .kiro/specs/storefront-experience-redesign/requirements.md (Requirement 9)
+ */
 const ProductCard = ({ product }) => {
   const { user } = useAuth();
   const { addToCart } = useCart();
   const { wishlist, addToWishlist, removeFromWishlist } = useWishlist();
   const { openAuthModal } = useAuthModal();
-  const [isHovered, setIsHovered] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
 
   const isInWishlist = wishlist?.items?.includes(product.id);
   const isOutOfStock = product.stock === 0;
+  const isFeatured = Boolean(product.featured);
+  const isOnSale = product.sale_price != null && product.sale_price < product.price;
 
   const handleWishlist = (e) => {
     e.preventDefault();
@@ -25,10 +47,10 @@ const ProductCard = ({ product }) => {
     }
     if (isInWishlist) {
       removeFromWishlist(product.id);
-      toast.success('Removed from wishlist');
+      toast.wishlistRemove('Removed from wishlist', product.name);
     } else {
       addToWishlist(product.id);
-      toast.success('Added to wishlist');
+      toast.wishlist('Saved to wishlist', product.name);
     }
   };
 
@@ -49,7 +71,7 @@ const ProductCard = ({ product }) => {
     setIsAddingToCart(true);
     try {
       await addToCart(product, defaultSize, defaultColor, 1);
-      toast.success(`${product.name} added to cart`);
+      toast.cart(`${product.name} added to cart`);
     } catch (error) {
       if (error.message === 'MAX_QUANTITY_EXCEEDED') {
         toast.error('Maximum quantity reached (10)');
@@ -62,184 +84,133 @@ const ProductCard = ({ product }) => {
   };
 
   return (
-    <Link 
-      to={`/product/${product.id}`} 
-      style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
+    <Link
+      to={`/product/${product.id}`}
+      className="block no-underline text-inherit focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2"
       data-testid={`product-card-${product.id}`}
     >
-      {/* Image Container */}
-      <div 
-        style={{ 
-          position: 'relative', 
-          overflow: 'hidden', 
-          background: '#f4f4f5',
-          marginBottom: '12px'
-        }}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
-        <img
-          src={getImageUrl(product.images?.[0]) || 'https://via.placeholder.com/400x500'}
+      {/* ── Image container ─────────────────────────────────────────── */}
+      <div className="group relative overflow-hidden bg-muted mb-3">
+        {/* Product image — grayscale only at lg+ (Req 9.3) */}
+        <Image
+          src={product.images?.[0]}
           alt={product.name}
-          style={{ 
-            width: '100%', 
-            aspectRatio: '3/4', 
-            objectFit: 'cover',
-            filter: 'grayscale(100%)',
-            transition: 'filter 0.4s ease, transform 0.5s ease'
-          }}
-          onMouseOver={(e) => {
-            e.target.style.filter = 'grayscale(0%)';
-            e.target.style.transform = 'scale(1.03)';
-          }}
-          onMouseOut={(e) => {
-            e.target.style.filter = 'grayscale(100%)';
-            e.target.style.transform = 'scale(1)';
-          }}
+          aspectRatio="3/4"
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+          imgClassName={cn(
+            'transition-[filter,transform] duration-400 ease-out',
+            'lg:grayscale lg:hover:grayscale-0',
+            'group-hover:scale-[1.03]'
+          )}
         />
-        {/* Wishlist Button */}
+
+        {/* ── Badge row (top-left) ─────────────────────────────────── */}
+        {(isFeatured || isOutOfStock || isOnSale) && (
+          <div className="absolute top-3 left-3 flex flex-col gap-1 z-10">
+            {isFeatured && (
+              <Badge variant="featured">Featured</Badge>
+            )}
+            {isOutOfStock && (
+              <Badge variant="outOfStock">Out of Stock</Badge>
+            )}
+            {isOnSale && !isOutOfStock && (
+              <Badge variant="sale">Sale</Badge>
+            )}
+          </div>
+        )}
+
+        {/* ── Wishlist button (top-right) ──────────────────────────── */}
         <button
           onClick={handleWishlist}
-          style={{
-            position: 'absolute',
-            top: '12px',
-            right: '12px',
-            width: '32px',
-            height: '32px',
-            background: '#fff',
-            border: '1px solid #e4e4e7',
-            borderRadius: '0px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            transition: 'all 0.2s',
-            zIndex: 10
-          }}
-          onMouseOver={(e) => {
-            e.currentTarget.style.borderColor = '#000';
-            e.currentTarget.style.transform = 'scale(1.05)';
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.borderColor = '#e4e4e7';
-            e.currentTarget.style.transform = 'scale(1)';
-          }}
+          aria-label={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
+          aria-pressed={isInWishlist}
+          className={cn(
+            'absolute top-3 right-3 z-10',
+            'flex h-8 w-8 items-center justify-center',
+            'bg-background border border-border',
+            'rounded-none',
+            'transition-[border-color,transform] duration-200',
+            'hover:border-foreground hover:scale-105',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+          )}
           data-testid={`wishlist-btn-${product.id}`}
         >
-          <Heart 
-            style={{ 
-              width: '16px', 
-              height: '16px',
-              fill: isInWishlist ? '#000' : 'none',
-              stroke: '#000',
-              strokeWidth: 1.5
-            }}
+          <Heart
+            className={cn(
+              'h-4 w-4 stroke-foreground',
+              isInWishlist ? 'fill-foreground' : 'fill-none'
+            )}
+            strokeWidth={1.5}
           />
         </button>
 
-        {/* Add to Cart Button */}
+        {/* ── Quick-Add button (bottom, hover-reveal) ──────────────── */}
         <button
           onClick={handleAddToCart}
           disabled={isOutOfStock || isAddingToCart}
-          style={{
-            position: 'absolute',
-            bottom: '12px',
-            right: '12px',
-            height: '32px',
-            padding: isOutOfStock ? '0 12px' : '0 8px',
-            background: isOutOfStock ? '#a1a1aa' : '#000',
-            border: 'none',
-            borderRadius: '0px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '6px',
-            cursor: isOutOfStock ? 'not-allowed' : 'pointer',
-            transition: 'all 0.3s ease',
-            zIndex: 10,
-            opacity: isHovered || isOutOfStock ? 1 : 0,
-            transform: isHovered || isOutOfStock ? 'translateY(0)' : 'translateY(8px)',
-            pointerEvents: isHovered || isOutOfStock ? 'auto' : 'none'
-          }}
-          onMouseOver={(e) => {
-            if (!isOutOfStock) {
-              e.currentTarget.style.background = '#27272a';
-            }
-          }}
-          onMouseOut={(e) => {
-            if (!isOutOfStock) {
-              e.currentTarget.style.background = '#000';
-            }
-          }}
+          aria-label={
+            isOutOfStock
+              ? `${product.name} — out of stock`
+              : `Quick add ${product.name} to cart`
+          }
+          className={cn(
+            'absolute bottom-3 right-3 z-10',
+            'flex h-8 items-center justify-center gap-1.5 px-3',
+            'font-mono text-[0.625rem] uppercase tracking-widest',
+            'rounded-none border-none',
+            'transition-[opacity,transform,background-color] duration-300',
+            // Hover-reveal pattern (Req 9.5)
+            'opacity-0 translate-y-2 pointer-events-none',
+            'group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto',
+            isOutOfStock
+              ? 'bg-muted text-muted-foreground cursor-not-allowed'
+              : 'bg-foreground text-background hover:bg-zinc-800 cursor-pointer'
+          )}
           data-testid={`add-to-cart-btn-${product.id}`}
         >
-          <ShoppingCart
-            style={{
-              width: '14px',
-              height: '14px',
-              stroke: '#fff',
-              strokeWidth: 1.5
-            }}
-          />
-          {isOutOfStock && (
-            <span style={{
-              fontFamily: "'JetBrains Mono', monospace",
-              fontSize: '10px',
-              color: '#fff',
-              fontWeight: 500,
-              letterSpacing: '0.02em'
-            }}>
-              Out of Stock
-            </span>
-          )}
+          <ShoppingCart className="h-3.5 w-3.5" strokeWidth={1.5} />
+          {isOutOfStock ? 'Out of Stock' : isAddingToCart ? '…' : 'Quick Add'}
         </button>
       </div>
 
-      {/* Product Info */}
-      <div>
-        <h3 style={{ 
-          fontFamily: "'Bodoni Moda', serif", 
-          fontSize: '16px', 
-          fontWeight: 700,
-          marginBottom: '4px',
-          letterSpacing: '-0.01em'
-        }}>
+      {/* ── Product info ─────────────────────────────────────────────── */}
+      <div className="space-y-1">
+        {/* Name */}
+        <h3 className="font-heading text-base font-bold tracking-tight leading-snug line-clamp-1">
           {product.name}
         </h3>
-        <p style={{ 
-          fontFamily: "'JetBrains Mono', monospace", 
-          fontSize: '11px', 
-          color: '#71717a',
-          marginBottom: '12px',
-          textTransform: 'lowercase'
-        }}>
+
+        {/* Category */}
+        <p className="font-mono text-[0.6875rem] text-muted-foreground lowercase">
           {product.category}
         </p>
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'space-between' 
-        }}>
-          <span style={{ 
-            fontFamily: "'JetBrains Mono', monospace", 
-            fontSize: '14px', 
-            fontWeight: 600,
-            color: '#000'
-          }}>
-            ₹{product.price?.toFixed(2)}
-          </span>
-          <div style={{ 
-            fontFamily: "'JetBrains Mono', monospace", 
-            fontSize: '11px', 
-            color: '#a1a1aa',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '4px'
-          }}>
-            <span style={{ color: '#000' }}>★</span>
-            <span style={{ color: '#71717a' }}>{product.rating?.toFixed(1)}</span>
-            <span style={{ color: '#a1a1aa' }}>({product.reviews_count || product.review_count || 0})</span>
+
+        {/* Color swatches (Req 9.4) */}
+        {product.colors?.length > 0 && (
+          <ColorSwatch colors={product.colors} className="py-0.5" />
+        )}
+
+        {/* Price row */}
+        <div className="flex items-center justify-between pt-1">
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-sm font-semibold text-foreground">
+              {formatPrice(isOnSale ? product.sale_price : product.price)}
+            </span>
+            {isOnSale && (
+              <span className="font-mono text-xs text-muted-foreground line-through">
+                {formatPrice(product.price)}
+              </span>
+            )}
           </div>
+
+          {/* Rating */}
+          {product.rating != null && (
+            <div className="flex items-center gap-1 font-mono text-[0.6875rem] text-muted-foreground">
+              <span className="text-foreground">★</span>
+              <span>{product.rating?.toFixed(1)}</span>
+              <span>({product.reviews_count ?? product.review_count ?? 0})</span>
+            </div>
+          )}
         </div>
       </div>
     </Link>

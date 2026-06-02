@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProviders } from './context/AppContext';
 import { Toaster } from 'sonner';
 import { isAdminSubdomain } from './utils/subdomain';
-import Navigation from './components/Navigation';
+import CustomerLayout from './components/layout/CustomerLayout';
 import './App.css';
 
 const HomePage = lazy(() => import('./pages/HomePage'));
@@ -53,8 +53,7 @@ function AdminApp() {
 
 function CustomerApp() {
   return (
-    <>
-      <Navigation />
+    <CustomerLayout>
       <Suspense fallback={<LoadingScreen />}>
         <Routes>
           <Route path="/" element={<HomePage />} />
@@ -77,7 +76,7 @@ function CustomerApp() {
           </Route>
         </Routes>
       </Suspense>
-    </>
+    </CustomerLayout>
   );
 }
 
@@ -90,7 +89,16 @@ function App() {
         <div className="App">
           <div className="noise-overlay"></div>
           {adminMode ? <AdminApp /> : <CustomerApp />}
-          <Toaster position="top-right" richColors />
+          <Toaster
+            position="top-right"
+            gap={8}
+            toastOptions={{
+              unstyled: false,
+              classNames: {
+                toast: 'font-body',
+              },
+            }}
+          />
         </div>
       </BrowserRouter>
     </AppProviders>

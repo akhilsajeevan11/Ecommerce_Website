@@ -18,6 +18,13 @@ module.exports = {
         "2xl": "1400px",
       },
     },
+    screens: {
+      sm: "640px",
+      md: "768px",
+      lg: "1024px",
+      xl: "1280px",
+      "2xl": "1400px",
+    },
     extend: {
       fontFamily: {
         heading: ['Bodoni Moda', 'serif'],
@@ -42,6 +49,14 @@ module.exports = {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
         },
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--primary-foreground))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--foreground))",
+        },
         muted: {
           DEFAULT: "hsl(var(--muted))",
           foreground: "hsl(var(--muted-foreground))",
@@ -58,6 +73,10 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+      },
+      boxShadow: {
+        "elev-1": "var(--elev-1)",
+        "elev-2": "var(--elev-2)",
       },
       borderRadius: {
         lg: "var(--radius)",

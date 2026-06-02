@@ -1,0 +1,50 @@
+{
+  "_comment": "Lighthouse CI configuration for NOIR storefront mobile audits. Thresholds: LCP ≤ 2500ms, CLS ≤ 0.05, INP ≤ 200ms, Performance score ≥ 0.85.",
+  "ci": {
+    "collect": {
+      "startServerCommand": "npx serve -s build --listen 3001",
+      "startServerReadyPattern": "Accepting connections",
+      "startServerReadyTimeout": 30000,
+      "url": [
+        "http://localhost:3001/",
+        "http://localhost:3001/shop"
+      ],
+      "numberOfRuns": 3,
+      "settings": {
+        "formFactor": "mobile",
+        "screenEmulation": {
+          "mobile": true,
+          "width": 375,
+          "height": 812,
+          "deviceScaleFactor": 2,
+          "disabled": false
+        },
+        "throttlingMethod": "simulate",
+        "throttling": {
+          "rttMs": 150,
+          "throughputKbps": 1638.4,
+          "cpuSlowdownMultiplier": 4,
+          "requestLatencyMs": 562.5,
+          "downloadThroughputKbps": 1474.56,
+          "uploadThroughputKbps": 675
+        },
+        "onlyCategories": ["performance", "accessibility", "best-practices", "seo"]
+      }
+    },
+    "assert": {
+      "preset": "lighthouse:no-pwa",
+      "assertions": {
+        "categories:performance": ["error", { "minScore": 0.85, "aggregationMethod": "median-run" }],
+        "largest-contentful-paint": ["error", { "maxNumericValue": 2500, "aggregationMethod": "median-run" }],
+        "cumulative-layout-shift": ["error", { "maxNumericValue": 0.05, "aggregationMethod": "median-run" }],
+        "interaction-to-next-paint": ["warn", { "maxNumericValue": 200, "aggregationMethod": "median-run" }],
+        "total-blocking-time": ["warn", { "maxNumericValue": 300, "aggregationMethod": "median-run" }],
+        "first-contentful-paint": ["warn", { "maxNumericValue": 1800, "aggregationMethod": "median-run" }],
+        "speed-index": ["warn", { "maxNumericValue": 3400, "aggregationMethod": "median-run" }]
+      }
+    },
+    "upload": {
+      "target": "temporary-public-storage"
+    }
+  }
+}

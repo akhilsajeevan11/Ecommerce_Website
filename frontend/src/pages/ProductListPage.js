@@ -1,292 +1,382 @@
-import { useEffect, useState } from 'react';
-import { Slider } from '../components/ui/slider';
-import { Checkbox } from '../components/ui/checkbox';
-import { Label } from '../components/ui/label';
-import ProductCard from '../components/ProductCard';
-import { SlidersHorizontal, X } from 'lucide-react';
-import { Button } from '../components/ui/button';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
+import { ChevronRight } from 'lucide-react';
 import axios from 'axios';
-import { motion } from 'framer-motion';
+
+import { useShopQuery } from '../hooks/useShopQuery';
+import FilterSidebar from '../components/shop/FilterSidebar';
+import FilterBottomSheet from '../components/shop/FilterBottomSheet';
+import ActiveFilterChips from '../components/shop/ActiveFilterChips';
+import SortMenu from '../components/shop/SortMenu';
+import ProductGrid from '../components/shop/ProductGrid';
+import Pagination from '../components/shop/Pagination';
+import DensityToggle from '../components/shop/DensityToggle';
+import Heading from '../components/primitives/Heading';
+import Text from '../components/primitives/Text';
+import { track } from '../lib/analytics';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-const ProductListPage = () => {
-  const [products, setProducts] = useState([]);
-  const [filteredProducts, setFilteredProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [selectedCategories, setSelectedCategories] = useState([]);
-  const [priceRange, setPriceRange] = useState([0, 50000]);
-  const [maxPrice, setMaxPrice] = useState(50000);
-  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+/**
+ * Pagination keys are excluded from `select_filter` analytics emission —
+ * paging through results is not a "filter" event semantically (Requirement
+ * 16.9 / design.md instrumentation map).
+ */
+const PAGINATION_FIELDS = new Set(['page', 'limit']);
 
-  const ALL_CATEGORIES = ["T-Shirt", "Hoodie", "Jacket", "Pants", "Shirt", "Sweater"];
+function patchHasFilterChange(patch) {
+  if (!patch || typeof patch !== 'object') return false;
+  for (const key of Object.keys(patch)) {
+    if (!PAGINATION_FIELDS.has(key)) return true;
+  }
+  return false;
+}
+
+function buildHeadline(q) {
+  if (typeof q === 'string' && q.trim() !== '') {
+    return `Results for "${q}"`;
+  }
+  return 'All Products';
+}
+
+function buildPageTitle(q) {
+  if (typeof q === 'string' && q.trim() !== '') {
+    return `Results for "${q}"`;
+  }
+  return 'Shop';
+}
+
+function buildCanonicalUrl(pathname) {
+  // Canonical points at the unfiltered route; per SEO best practice the
+  // filtered combinations are not all individually crawlable canonical
+  // pages. Filter/sort/pagination params are intentionally stripped.
+  if (typeof window !== 'undefined' && window.location && window.location.origin) {
+    return `${window.location.origin}${pathname}`;
+  }
+  return pathname;
+}
+
+/**
+ * ProductListPage — the URL-driven shop route at `/shop`.
+ *
+ * Spec:
+ *   .kiro/specs/storefront-experience-redesign/requirements.md
+ *     Requirement 6 (URL state, filters, sorting, pagination)
+ *     Requirement 16.9 (analytics emission)
+ *     Requirement 1.3 (no inline `style={}` attributes)
+ *     Requirement 1.4 (no `window.innerWidth` references — Tailwind
+ *                       breakpoints only)
+ *   .kiro/specs/storefront-experience-redesign/design.md
+ *     Shop_Page wireframe and instrumentation map
+ *
+ * Composition (top → bottom):
+ *   1. <Helmet> per-route title/meta/canonical (Requirement 16.1, 16.2)
+ *   2. Breadcrumb — inline `<nav aria-label="Breadcrumb">` (no Breadcrumb
+ *      molecule exists in the project yet, so we render the markup inline
+ *      to keep this task self-contained)
+ *   3. Page header — H1, item count, SortMenu, DensityToggle
+ *   4. ActiveFilterChips
+ *   5. FilterBottomSheet trigger (below `lg`)
+ *   6. Two-column layout:
+ *        - FilterSidebar (`hidden lg:block lg:w-64 lg:shrink-0`)
+ *        - Results column (ProductGrid + Pagination)
+ *
+ * State:
+ *   - All filter/sort/pagination state lives in the URL via `useShopQuery`
+ *     (the only reader/writer of ShopParams).
+ *   - Density is local component state — it's a viewing preference, not
+ *     part of the shareable filtered view, so it intentionally stays out
+ *     of the URL (per task brief).
+ *   - Categories are fetched once on mount and passed into FilterSidebar /
+ *     FilterBottomSheet via the `availableCategories` prop. Sizes and
+ *     colors are hardcoded inside FilterSidebar's defaults.
+ *
+ * Analytics (Requirement 16.9):
+ *   - `view_item_list` fires after every successful results render, keyed
+ *     by canonical query string so it emits once per query change rather
+ *     than on every re-render.
+ *   - `select_filter` fires from the `setParam`/`setParams` wrappers when
+ *     the patch touches a non-pagination field. Per the design doc, paging
+ *     through results is not a `select_filter` event.
+ *
+ * Styling: Tailwind utility classes only — every class routes through the
+ * design tokens, no raw hex literals or inline `style` attributes.
+ */
+const ProductListPage = () => {
+  const location = useLocation();
+
+  const {
+    params,
+    setParam,
+    setParams,
+    clearAll,
+    queryString,
+    data,
+    isLoading,
+    isError,
+  } = useShopQuery();
+
+  // Local UI state (not URL-backed):
+  //  - density: comfy/compact toggle, viewing preference only.
+  const [density, setDensity] = useState('comfy');
+
+  // Categories are fetched once on mount. Failing silently here is the
+  // right call: the FilterSidebar gracefully degrades to "No categories
+  // available" rather than blocking the entire page.
+  const [availableCategories, setAvailableCategories] = useState([]);
 
   useEffect(() => {
-    loadProducts();
-    
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
+    if (!BACKEND_URL) return undefined;
+    let cancelled = false;
+    axios
+      .get(`${API}/categories`)
+      .then((response) => {
+        if (cancelled) return;
+        const body = response && response.data;
+        if (Array.isArray(body)) {
+          setAvailableCategories(body);
+        }
+      })
+      .catch((err) => {
+        // Silent — sidebar shows the empty-state copy until /api/categories
+        // recovers. We log to console so a dev still sees the failure.
+        // eslint-disable-next-line no-console
+        console.error('[ProductListPage] categories fetch failed', err);
+      });
+    return () => {
+      cancelled = true;
     };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  useEffect(() => {
-    applyFilters();
-  }, [products, selectedCategories, priceRange]);
+  // ---------------------------------------------------------------------
+  // Analytics wrappers around setParam / setParams
+  // ---------------------------------------------------------------------
 
-    const loadProducts = async () => {
-      try {
-        const response = await axios.get(`${API}/products`);
-        setProducts(response.data);
-        // Ensure ALL_CATEGORIES are available for filtering
-        setCategories(ALL_CATEGORIES);
-        const prices = response.data.map(p => p.price);
-        const max = Math.max(...prices, 50000);
-        setMaxPrice(max);
-        setPriceRange([0, max]);
-      } catch (error) {
-        console.error('Load products error:', error);
+  const trackedSetParam = useCallback(
+    (key, value) => {
+      if (!PAGINATION_FIELDS.has(key)) {
+        track('select_filter', { field: key, value });
       }
-    };
-
-
-  const applyFilters = () => {
-    let filtered = products;
-    if (selectedCategories.length > 0) {
-      filtered = filtered.filter(p => selectedCategories.includes(p.category));
-    }
-    filtered = filtered.filter(p => p.price >= priceRange[0] && p.price <= priceRange[1]);
-    setFilteredProducts(filtered);
-  };
-
-  const toggleCategory = (category) => {
-    setSelectedCategories(prev =>
-      prev.includes(category)
-        ? prev.filter(c => c !== category)
-        : [...prev, category]
-    );
-  };
-
-  // Mobile Filters Overlay
-  const MobileFiltersOverlay = () => (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 50 }}>
-      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)' }} onClick={() => setMobileFiltersOpen(false)} />
-      <div style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: '280px', background: '#fff', padding: '24px', overflowY: 'auto' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '32px' }}>
-          <h2 style={{ fontFamily: "'Bodoni Moda', serif", fontSize: '20px', fontWeight: 700 }}>Filters</h2>
-          <button onClick={() => setMobileFiltersOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-            <X style={{ width: '20px', height: '20px' }} />
-          </button>
-        </div>
-        <FilterContent 
-          categories={categories}
-          selectedCategories={selectedCategories}
-          toggleCategory={toggleCategory}
-          priceRange={priceRange}
-          setPriceRange={setPriceRange}
-          maxPrice={maxPrice}
-        />
-      </div>
-    </div>
+      setParam(key, value);
+    },
+    [setParam]
   );
 
-    return (
-      <div className="page-transition" style={{ background: '#fff', minHeight: '100vh' }}>
-        <div style={{ padding: isMobile ? '32px 16px' : '64px 48px' }}>
-          <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-            
-            {/* Header */}
-            <div style={{ marginBottom: '64px' }}>
-              <h1 style={{ 
-                fontFamily: "'Bodoni Moda', serif", 
-                fontSize: isMobile ? '48px' : '72px', 
-                fontWeight: 700, 
-                letterSpacing: '-0.02em',
-                marginBottom: '16px',
-                lineHeight: 1
-              }} data-testid="page-title">
-                All Products
-              </h1>
-              <p style={{ 
-                fontFamily: "'JetBrains Mono', monospace", 
-                fontSize: '12px', 
-                letterSpacing: '0.05em',
-                color: '#71717a',
-                textTransform: 'lowercase'
-              }}>
-                {filteredProducts.length} {filteredProducts.length === 1 ? 'item' : 'items'}
-              </p>
-            </div>
+  const trackedSetParams = useCallback(
+    (patch) => {
+      if (patchHasFilterChange(patch)) {
+        // Emit one event per non-pagination field changed — keeps the
+        // event payload simple and matches the per-field semantics that
+        // analytics platforms expect.
+        Object.entries(patch || {}).forEach(([k, v]) => {
+          if (!PAGINATION_FIELDS.has(k)) {
+            track('select_filter', { field: k, value: v });
+          }
+        });
+      }
+      setParams(patch);
+    },
+    [setParams]
+  );
 
+  // ---------------------------------------------------------------------
+  // view_item_list — emit once per successful data render, keyed by the
+  // canonical query string so re-renders without a new fetch don't
+  // duplicate the event.
+  // ---------------------------------------------------------------------
 
-            {/* Mobile Filter Button */}
-            {isMobile && (
-              <div style={{ marginBottom: '24px' }}>
-                <Button 
-                  variant="outline" 
-                  style={{ borderRadius: 0, width: '100%', justifyContent: 'flex-start', height: '44px' }}
-                  onClick={() => setMobileFiltersOpen(true)}
-                  data-testid="mobile-filter-btn"
-                >
-                  <SlidersHorizontal style={{ width: '16px', height: '16px', marginRight: '12px' }} />
-                  Filters
-                </Button>
-              </div>
-            )}
+  const lastFiredQueryRef = useRef(null);
+  useEffect(() => {
+    if (isLoading || !data) return;
+    if (lastFiredQueryRef.current === queryString) return;
+    lastFiredQueryRef.current = queryString;
+    track('view_item_list', {
+      params,
+      count: Array.isArray(data.items) ? data.items.length : 0,
+      total: typeof data.total === 'number' ? data.total : 0,
+    });
+  }, [isLoading, data, queryString, params]);
 
-            {/* Mobile Filters Overlay */}
-            {mobileFiltersOpen && isMobile && <MobileFiltersOverlay />}
+  // ---------------------------------------------------------------------
+  // Derived rendering values
+  // ---------------------------------------------------------------------
 
-            {/* Main Layout */}
-            <div style={{ 
-              display: 'flex', 
-              gap: isMobile ? '0' : '64px',
-              flexDirection: isMobile ? 'column' : 'row'
-            }}>
-              
-              {/* Desktop Sidebar */}
-              {!isMobile && (
-                <aside style={{ width: '220px', flexShrink: 0 }}>
-                  <div style={{ position: 'sticky', top: '120px' }}>
-                    <h2 style={{ 
-                      fontFamily: "'Bodoni Moda', serif", 
-                      fontSize: '20px', 
-                      fontWeight: 700, 
-                      marginBottom: '32px',
-                      letterSpacing: '-0.01em'
-                    }}>
-                      Filters
-                    </h2>
-                    <FilterContent 
-                      categories={categories}
-                      selectedCategories={selectedCategories}
-                      toggleCategory={toggleCategory}
-                      priceRange={priceRange}
-                      setPriceRange={setPriceRange}
-                      maxPrice={maxPrice}
-                    />
-                  </div>
-                </aside>
-              )}
+  const total = data && typeof data.total === 'number' ? data.total : 0;
+  const items = data && Array.isArray(data.items) ? data.items : [];
+  const headline = buildHeadline(params.q);
+  const pageTitle = buildPageTitle(params.q);
+  const canonicalUrl = useMemo(
+    () => buildCanonicalUrl(location.pathname),
+    [location.pathname]
+  );
 
-                {/* Products Grid */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  {filteredProducts.length > 0 ? (
-                    <div style={{ 
-                      display: 'grid', 
-                      gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(280px, 1fr))',
-                      gap: isMobile ? '16px' : '32px'
-                    }}>
-                    {filteredProducts.map((product, index) => (
-                      <motion.div
-                        key={product.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: index * 0.03 }}
-                      >
-                        <ProductCard product={product} />
-                      </motion.div>
-                    ))}
-                  </div>
-                ) : (
-                  <div style={{ textAlign: 'center', padding: '96px 0' }}>
-                    <p style={{ fontFamily: "'JetBrains Mono', monospace", color: '#71717a', fontSize: '13px' }}>
-                      No products found
-                    </p>
-                  </div>
-                )}
-              </div>
+  const handlePageChange = useCallback(
+    (nextPage) => {
+      // Pagination is intentionally NOT tracked as `select_filter` — it
+      // routes straight through `setParam` so the URL writes happen but no
+      // event fires.
+      setParam('page', nextPage);
+      // After a page change, scroll back to the top of the results so the
+      // customer is not stranded mid-grid on a fresh page (matches
+      // standard e-commerce UX).
+      if (typeof window !== 'undefined') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    },
+    [setParam]
+  );
+
+  const itemsLabel = `${total} ${total === 1 ? 'item' : 'items'}`;
+
+  return (
+    <div className="page-transition min-h-screen bg-background">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta
+          name="description"
+          content="Browse the NOIR collection — monochrome luxury essentials. Filter by category, size, color, and price."
+        />
+        <meta property="og:title" content={`${pageTitle} | NOIR`} />
+        <meta
+          property="og:description"
+          content="Browse the NOIR collection — monochrome luxury essentials."
+        />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={canonicalUrl} />
+        <link rel="canonical" href={canonicalUrl} />
+      </Helmet>
+
+      <div className="mx-auto w-full max-w-screen-2xl px-4 py-8 sm:px-6 sm:py-12 lg:px-12 lg:py-16">
+        {/* Breadcrumb — Home / Shop. Inline because no Breadcrumb molecule
+            ships yet; the markup follows WCAG breadcrumb pattern. */}
+        <nav
+          aria-label="Breadcrumb"
+          className="mb-6 lg:mb-8"
+          data-testid="shop-breadcrumb"
+        >
+          <ol className="flex items-center gap-2 font-mono text-[0.6875rem] uppercase tracking-[0.15em] text-muted-foreground">
+            <li>
+              <Link
+                to="/"
+                className="transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                Home
+              </Link>
+            </li>
+            <li aria-hidden="true" className="flex items-center">
+              <ChevronRight className="h-3 w-3" strokeWidth={1.5} />
+            </li>
+            <li>
+              <span aria-current="page" className="text-foreground">
+                Shop
+              </span>
+            </li>
+          </ol>
+        </nav>
+
+        {/* Page header: H1, item count, sort, density */}
+        <div className="mb-6 flex flex-col gap-4 lg:mb-8 lg:flex-row lg:items-end lg:justify-between">
+          <div className="flex flex-col gap-2">
+            <Heading
+              as="h1"
+              size="h1"
+              className="font-heading"
+              data-testid="page-title"
+            >
+              {headline}
+            </Heading>
+            <Text
+              variant="caption"
+              tone="muted"
+              data-testid="shop-result-count"
+            >
+              {itemsLabel}
+            </Text>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <SortMenu
+              value={params.sort}
+              onValueChange={(next) => trackedSetParam('sort', next)}
+            />
+            {/* Density is a luxury at narrow widths — only show at sm+. */}
+            <div className="hidden sm:block">
+              <DensityToggle value={density} onChange={setDensity} />
             </div>
           </div>
         </div>
-      </div>
-    );
-  };
 
-    // Filter Content Component
-    const FilterContent = ({ categories, selectedCategories, toggleCategory, priceRange, setPriceRange, maxPrice }) => (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '48px' }}>
-        {/* Category Filter */}
-        <div>
-          <h3 style={{ 
-            fontFamily: "'JetBrains Mono', monospace", 
-            fontSize: '11px', 
-            marginBottom: '24px',
-            fontWeight: 600,
-            textTransform: 'uppercase',
-            letterSpacing: '0.2em',
-            color: '#000'
-          }}>
-            Category
-          </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {categories.map(category => (
-                <div key={category} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '4px 0' }}>
-                  <Checkbox
-                    id={`cat-${category}`}
-                    checked={selectedCategories.includes(category)}
-                    onCheckedChange={() => toggleCategory(category)}
-                    style={{ borderRadius: 0 }}
-                    data-testid={`filter-category-${category}`}
-                  />
-                  <Label 
-                    htmlFor={`cat-${category}`} 
-                    style={{ 
-                      fontFamily: "'Manrope', sans-serif", 
-                      fontSize: '14px', 
-                      cursor: 'pointer',
-                      fontWeight: 400,
-                      color: '#000',
-                      lineHeight: 1,
-                      userSelect: 'none'
-                    }}
-                  >
-                    {category}
-                  </Label>
-                </div>
-              ))}
-            </div>
-        </div>
-  
-        {/* Price Range Filter */}
-        <div>
-          <h3 style={{ 
-            fontFamily: "'JetBrains Mono', monospace", 
-            fontSize: '11px', 
-            marginBottom: '24px',
-            fontWeight: 600,
-            textTransform: 'uppercase',
-            letterSpacing: '0.2em',
-            color: '#000'
-          }}>
-            Price Range
-          </h3>
-          <Slider
-            min={0}
-            max={maxPrice}
-            step={100}
-            value={priceRange}
-            onValueChange={setPriceRange}
-            style={{ marginBottom: '16px' }}
-            data-testid="price-slider"
+        {/* Active filter chips — empty when ShopParams equals defaults */}
+        <div className="mb-4 lg:mb-6">
+          <ActiveFilterChips
+            params={params}
+            setParams={trackedSetParams}
+            clearAll={clearAll}
           />
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              fontFamily: "'JetBrains Mono', monospace",
-              fontSize: '11px', 
-              color: '#000',
-              letterSpacing: '0.05em',
-              marginTop: '8px'
-            }}>
-              <span>₹{priceRange[0].toLocaleString()}</span>
-              <span>₹{priceRange[1].toLocaleString()}</span>
-            </div>
+        </div>
+
+        {/* Mobile: filter trigger above the grid (hidden at lg+) */}
+        <div className="mb-4 lg:hidden">
+          <FilterBottomSheet
+            params={params}
+            setParam={trackedSetParam}
+            setParams={trackedSetParams}
+            clearAll={clearAll}
+            availableCategories={availableCategories}
+          />
+        </div>
+
+        {/* Two-column layout: sidebar (lg+) + results column */}
+        <div className="flex flex-col gap-8 lg:flex-row lg:gap-10">
+          <FilterSidebar
+            params={params}
+            setParam={trackedSetParam}
+            setParams={trackedSetParams}
+            availableCategories={availableCategories}
+          />
+
+          <div className="min-w-0 flex-1">
+            {isError && !data ? (
+              <div
+                role="alert"
+                className="border border-border bg-background px-4 py-12 text-center"
+                data-testid="shop-error-state"
+              >
+                <Heading as="h2" size="h3" className="mb-2 font-heading">
+                  Something went wrong
+                </Heading>
+                <Text variant="body" tone="muted">
+                  We couldn&apos;t load products right now. Please try again
+                  in a moment.
+                </Text>
+              </div>
+            ) : (
+              <ProductGrid
+                items={items}
+                isLoading={isLoading}
+                clearAll={clearAll}
+                density={density}
+              />
+            )}
+
+            {/* Pagination only renders when there is more than one page. */}
+            {!isLoading && total > 0 ? (
+              <div className="mt-12 lg:mt-16">
+                <Pagination
+                  page={params.page}
+                  limit={params.limit}
+                  total={total}
+                  onPageChange={handlePageChange}
+                />
+              </div>
+            ) : null}
+          </div>
         </div>
       </div>
-    );
+    </div>
+  );
+};
 
 export default ProductListPage;

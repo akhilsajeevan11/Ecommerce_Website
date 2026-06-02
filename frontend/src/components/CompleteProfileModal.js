@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AppContext';
-import { toast } from 'sonner';
+import { noirToast as toast } from '../lib/noir-toast';
 import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
