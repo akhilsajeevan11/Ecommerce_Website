@@ -44,6 +44,7 @@ class Category(Base):
     name = Column(String(100), unique=True, nullable=False)
     slug = Column(String(100), unique=True, nullable=False)
     description = Column(Text, nullable=True)
+    image_url = Column(Text, nullable=True)
     is_active = Column(Boolean, nullable=False, default=True)
     created_at = Column(
         DateTime(timezone=True),
